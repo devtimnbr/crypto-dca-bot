@@ -1,0 +1,6 @@
+version: "3.7"
+
+services:
+  crypto-dca-bot:
+    build: .
+    restart: unless-stopped

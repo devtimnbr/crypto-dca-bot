@@ -1,0 +1,39 @@
+{
+  "name": "crypto-dca-bot",
+  "version": "1.0.0",
+  "description": "This bot automatically buys bitcoin or a specific cryptocurrency based on user environment settings using the ccxt library.",
+  "main": "dist/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node dist/main.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "ccxt": "^3.0.47",
+    "dotenv": "^16.0.3",
+    "envalid": "^7.3.1",
+    "telegraf": "^4.12.2"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.11",
+    "typescript": "^5.0.3"
+  },
+  "keywords": [
+    "bitcoin",
+    "btc",
+    "cryptocurrency",
+    "crypto currency",
+    "coin",
+    "dca",
+    "dollar cost average",
+    "bot",
+    "auto-invest",
+    "trade"
+  ],
+  "author": {
+    "name": "Tim Neubauer",
+    "email": "hello@timneubauer.dev",
+    "url": "https://timneubauer.dev"
+  }
+}
