@@ -5,7 +5,7 @@ import {
   PUBLIC_KEY,
   PRIVATE_KEY,
   PAIR,
-  BUY_AMOUNT,
+  DCA_AMOUNT,
   DCA_DURATION_IN_MS,
   DCA_BUDGET,
 } from "./constants";
@@ -45,7 +45,7 @@ const tg = new Telegram();
 
     try {
       // place market order
-      await exchange.createOrder(PAIR, "market", "buy", BUY_AMOUNT);
+      await exchange.createOrder(PAIR, "market", "buy", DCA_AMOUNT);
 
       const balance = (await exchange.fetchBalance()) as Balances;
 
@@ -53,8 +53,8 @@ const tg = new Telegram();
       const quoteTotal = Number(balance[quote].total);
 
       // Calculate when to place next dca order
-      const nextOrderInMs = Math.round(DCA_DURATION_IN_MS / (DCA_BUDGET / price / BUY_AMOUNT));
-      const budgetDepletedInMs = nextOrderInMs * (quoteTotal / BUY_AMOUNT / price);
+      const nextOrderInMs = Math.round(DCA_DURATION_IN_MS / (DCA_BUDGET / price / DCA_AMOUNT));
+      const budgetDepletedInMs = nextOrderInMs * (quoteTotal / DCA_AMOUNT / price);
       const budgetDepletedAt = new Date(Date.now() + budgetDepletedInMs);
 
       tg.sendBuyMessage({ base, quote, price, baseTotal, quoteTotal, budgetDepletedAt, budgetDepletedInMs });

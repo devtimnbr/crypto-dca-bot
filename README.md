@@ -32,7 +32,7 @@ The following environment variables are required:
 - `PUBLIC_KEY`: Your exchange API public key.
 - `PRIVATE_KEY`: Your exchange API private key.
 - `PAIR`: The currency pair to trade (e.g. `BTC/EUR`).
-- `BUY_AMOUNT`: The amount of base currency (e.g. BTC) to buy per DCA order (e.g. `0.001`).
+- `DCA_AMOUNT`: The amount of crypto/currency (e.g. BTC) to accumulate per DCA order (e.g. `0.001`).
 - `DCA_BUDGET`: The total amount of quote currency (e.g. EUR) to use for DCA (e.g. `1000`).
 - `DCA_DURATION_IN_MS`: The duration of the dollar cost averaging (DCA) period in milliseconds (e.g. `2592000000` for 30 days).
 

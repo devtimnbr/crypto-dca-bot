@@ -1,7 +1,7 @@
 import { Balances } from "ccxt";
 import { Context, Telegraf } from "telegraf";
 import { exchange } from "./main";
-import { BASE_DECIMALS, BUY_AMOUNT, QUOTE_DECIMALS, TG_BOT_TOKEN, TG_CHAT_ID } from "./constants";
+import { BASE_DECIMALS, DCA_AMOUNT, QUOTE_DECIMALS, TG_BOT_TOKEN, TG_CHAT_ID } from "./constants";
 import { dhm, removeLeadingWhitespace } from "./utils";
 
 export default class Telegram {
@@ -84,8 +84,8 @@ export default class Telegram {
   }) {
     const msg = removeLeadingWhitespace(`🟩🟩
 
-    <b>Amount</b>: ${BUY_AMOUNT} ${base}
-    <b>For</b>: ${(price * BUY_AMOUNT).toFixed(2)} ${quote}
+    <b>Amount</b>: ${DCA_AMOUNT} ${base}
+    <b>For</b>: ${(price * DCA_AMOUNT).toFixed(2)} ${quote}
 
     <b>Base</b>: ${baseTotal.toFixed(BASE_DECIMALS)} ${base}
     <b>Quote</b>: ${quoteTotal.toFixed(QUOTE_DECIMALS + 2)} ${quote}

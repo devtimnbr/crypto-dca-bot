@@ -14,7 +14,7 @@ const env = cleanEnv(process.env, {
   PAIR: str(),
   DCA_DURATION_IN_MS: num(),
   DCA_BUDGET: num(),
-  BUY_AMOUNT: num(),
+  DCA_AMOUNT: num(),
 });
 
 export const SANDBOX = env.SANDBOX;
@@ -24,8 +24,8 @@ export const PRIVATE_KEY = env.PRIVATE_KEY;
 export const PAIR = env.PAIR;
 export const DCA_DURATION_IN_MS = env.DCA_DURATION_IN_MS;
 export const DCA_BUDGET = env.DCA_BUDGET;
-export const BUY_AMOUNT = env.BUY_AMOUNT;
-export const BASE_DECIMALS = getDecimals(env.BUY_AMOUNT.toString());
+export const DCA_AMOUNT = env.DCA_AMOUNT;
+export const BASE_DECIMALS = getDecimals(env.DCA_AMOUNT.toString());
 export const QUOTE_DECIMALS = getDecimals(env.DCA_BUDGET.toString());
 
 // optional

@@ -4,7 +4,7 @@ declare namespace NodeJS {
     PUBLIC_KEY: string;
     PRIVATE_KEY: string;
     PAIR: string;
-    BUY_AMOUNT: string;
+    DCA_AMOUNT: string;
     EXCHANGE_ID: string;
     DCA_DURATION_IN_MS: string;
     DCA_BUDGET: string;
