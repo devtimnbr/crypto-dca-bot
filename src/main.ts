@@ -14,7 +14,7 @@ import { sleep, dhm, printBanner } from "./utils";
 
 const exchangeClass = ccxt[EXCHANGE_ID as keyof typeof ccxt] as typeof Exchange;
 
-export const exchange: Exchange = new exchangeClass({
+export const exchange = new exchangeClass({
   apiKey: PUBLIC_KEY,
   secret: PRIVATE_KEY,
   enableRateLimit: true,
