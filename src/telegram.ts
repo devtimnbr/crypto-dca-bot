@@ -84,11 +84,11 @@ export default class Telegram {
   }) {
     const msg = removeLeadingWhitespace(`🟩🟩
 
-    <b>Amount</b>: ${DCA_AMOUNT} ${base}
+    <b>Got</b>: ${DCA_AMOUNT} ${base}
     <b>For</b>: ${(price * DCA_AMOUNT).toFixed(2)} ${quote}
 
-    <b>Base</b>: ${baseTotal.toFixed(BASE_DECIMALS)} ${base}
-    <b>Quote</b>: ${quoteTotal.toFixed(QUOTE_DECIMALS + 2)} ${quote}
+    <b>${base}</b>: ${baseTotal.toFixed(BASE_DECIMALS)} 
+    <b>${quote}</b>: ${quoteTotal.toFixed(QUOTE_DECIMALS + 2)}
 
     <b>Depleted at</b>: ${budgetDepletedAt.toLocaleDateString()}
     <b>Depleted in</b>: ${dhm(budgetDepletedInMs)}`);
