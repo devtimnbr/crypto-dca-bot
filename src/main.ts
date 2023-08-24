@@ -30,7 +30,7 @@ const tg = new Telegram();
 // run the sript
 (async () => {
   printBanner();
-  console.log("Selected trading pair:", PAIR);
+  console.log("Selected trading pair: ", PAIR);
 
   let isInsufficientFunds = false;
 
@@ -54,10 +54,8 @@ const tg = new Telegram();
 
       // Calculate when to place next dca order
       const nextOrderInMs = Math.round(DCA_DURATION_IN_MS / (DCA_BUDGET / price / DCA_AMOUNT));
-      const budgetDepletedInMs = nextOrderInMs * (quoteTotal / DCA_AMOUNT / price);
-      const budgetDepletedAt = new Date(Date.now() + budgetDepletedInMs);
 
-      tg.sendBuyMessage({ base, quote, price, baseTotal, quoteTotal, budgetDepletedAt, budgetDepletedInMs });
+      tg.sendBuyMessage({ base, quote, price, baseTotal, quoteTotal, nextOrderInMs });
 
       console.log(
         `Waiting ${dhm(nextOrderInMs)} until ${new Date(Date.now() + nextOrderInMs).toLocaleString()} for next order`
