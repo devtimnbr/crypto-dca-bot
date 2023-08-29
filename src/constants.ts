@@ -24,7 +24,7 @@ export const PAIR = env.PAIR;
 export const DCA_DURATION_IN_MS = env.DCA_DURATION_IN_MS;
 export const DCA_BUDGET = env.DCA_BUDGET;
 export const DCA_AMOUNT = process.env.DCA_AMOUNT;
-export const BASE_DECIMALS = getDecimals(env.DCA_AMOUNT.toString());
+export const BASE_DECIMALS = getDecimals(process.env.DCA_AMOUNT.toString());
 export const QUOTE_DECIMALS = getDecimals(env.DCA_BUDGET.toString());
 
 // optional
