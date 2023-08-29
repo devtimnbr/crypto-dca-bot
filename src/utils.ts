@@ -55,7 +55,7 @@ export function getMinimumAmount(exchange: Exchange, market: Market, price: numb
       : exchange.amountToPrecision(market.symbol, market.limits.amount.min);
   } else if (DCA_AMOUNT) {
     // check for env var
-    return DCA_AMOUNT;
+    return Number(DCA_AMOUNT);
   } else {
     console.log("The exchange did not provide the required data");
     process.exit();
