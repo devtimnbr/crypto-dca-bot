@@ -1,3 +1,6 @@
+import { Exchange, Market } from "ccxt";
+import { DCA_AMOUNT } from "./constants";
+
 // util for logging
 export function dhm(ms: number): string {
   const days = Math.floor(ms / (24 * 60 * 60 * 1000));
@@ -34,6 +37,29 @@ export function removeLeadingWhitespace(input: string): string {
   const lines = input.split("\n");
   const trimmedLines = lines.map((line) => line.trimStart());
   return trimmedLines.join("\n");
+}
+
+export function getMinimumAmount(exchange: Exchange, market: Market, price: number): number {
+  if (market?.limits.amount?.min && !market.limits.cost?.min) {
+    // only amount min defined - just return amount min
+    return exchange.amountToPrecision(market.symbol, market.limits.amount.min);
+  } else if (market?.limits.cost?.min && market.limits.amount?.min) {
+    // Calculate min amount based on cost constraint
+    const minFromLimitCost = market.limits.cost.min / price;
+    // Calculate min amount based on amount constraint
+    const costFromLimitAmount = market.limits.amount.min * price;
+
+    // Ensure the calculated min amount is not lower than the amount constraint
+    return market.limits.cost.min > costFromLimitAmount
+      ? exchange.amountToPrecision(market.symbol, minFromLimitCost)
+      : exchange.amountToPrecision(market.symbol, market.limits.amount.min);
+  } else if (DCA_AMOUNT) {
+    // check for env var
+    return DCA_AMOUNT;
+  } else {
+    console.log("The exchange did not provide the required data");
+    process.exit();
+  }
 }
 
 export function printBanner(): void {

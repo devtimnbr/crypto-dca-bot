@@ -10,7 +10,7 @@ import {
   DCA_BUDGET,
 } from "./constants";
 import Telegram from "./telegram";
-import { sleep, dhm, printBanner } from "./utils";
+import { sleep, dhm, printBanner, getMinimumAmount } from "./utils";
 
 const exchangeClass = ccxt[EXCHANGE_ID as keyof typeof ccxt] as typeof Exchange;
 
@@ -37,6 +37,14 @@ const tg = new Telegram();
   // split pair example: BTC/USDT:USDT
   const [base, quote] = PAIR?.split(":")[0].split("/");
 
+  // required for formatting numbers
+  const markets = await exchange.fetchMarkets();
+  const market = markets.find((el) => el.symbol === PAIR);
+
+  if (!market) {
+    throw Error("Pair is not supported");
+  }
+
   // process dna plan
   while (true) {
     // Get current quote price in base currency
@@ -44,8 +52,9 @@ const tg = new Telegram();
     const price = ticker.last as number;
 
     try {
+      const amount = getMinimumAmount(exchange, market, price);
       // place market order
-      await exchange.createOrder(PAIR, "market", "buy", DCA_AMOUNT);
+      await exchange.createOrder(PAIR, "market", "buy", amount);
 
       const balance = (await exchange.fetchBalance()) as Balances;
 
@@ -53,9 +62,9 @@ const tg = new Telegram();
       const quoteTotal = Number(balance[quote].total);
 
       // Calculate when to place next dca order
-      const nextOrderInMs = Math.round(DCA_DURATION_IN_MS / (DCA_BUDGET / price / DCA_AMOUNT));
+      const nextOrderInMs = Math.round(DCA_DURATION_IN_MS / (DCA_BUDGET / price / amount));
 
-      tg.sendBuyMessage({ base, quote, price, baseTotal, quoteTotal, nextOrderInMs });
+      tg.sendBuyMessage({ base, quote, price, amount, baseTotal, quoteTotal, nextOrderInMs });
 
       console.log(
         `Waiting ${dhm(nextOrderInMs)} until ${new Date(Date.now() + nextOrderInMs).toLocaleString()} for next order`

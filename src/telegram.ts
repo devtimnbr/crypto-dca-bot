@@ -69,25 +69,27 @@ export default class Telegram {
     base,
     price,
     baseTotal,
+    amount,
     quoteTotal,
     nextOrderInMs,
     quote,
   }: {
     base: string;
     price: number;
+    amount: number;
     baseTotal: number;
     quoteTotal: number;
     nextOrderInMs: number;
 
     quote: string;
   }) {
-    const budgetDepletedInMs = nextOrderInMs * (quoteTotal / DCA_AMOUNT / price);
+    const budgetDepletedInMs = nextOrderInMs * (quoteTotal / amount / price);
     const budgetDepletedAt = new Date(Date.now() + budgetDepletedInMs);
 
     const msg = removeLeadingWhitespace(`🟩🟩
 
-    <b>Got</b>: ${DCA_AMOUNT} ${base}
-    <b>For</b>: ${(price * DCA_AMOUNT).toFixed(2)} ${quote}
+    <b>Got</b>: ${amount} ${base}
+    <b>For</b>: ${(price * amount).toFixed(2)} ${quote}
 
     <b>${base}</b>: ${baseTotal.toFixed(BASE_DECIMALS)} 
     <b>${quote}</b>: ${quoteTotal.toFixed(QUOTE_DECIMALS + 2)}
