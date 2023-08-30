@@ -1,7 +1,6 @@
 import ccxt from "ccxt";
 import dotenv from "dotenv";
 import { cleanEnv, str, bool, num } from "envalid";
-import { getDecimals } from "./utils";
 
 dotenv.config();
 
@@ -23,9 +22,7 @@ export const PRIVATE_KEY = env.PRIVATE_KEY;
 export const PAIR = env.PAIR;
 export const DCA_DURATION_IN_MS = env.DCA_DURATION_IN_MS;
 export const DCA_BUDGET = env.DCA_BUDGET;
-export const DCA_AMOUNT = process.env.DCA_AMOUNT ? process.env.DCA_AMOUNT : 0;
-export const BASE_DECIMALS = getDecimals(process.env.DCA_AMOUNT.toString());
-export const QUOTE_DECIMALS = getDecimals(env.DCA_BUDGET.toString());
+export const DCA_AMOUNT = process.env.DCA_AMOUNT;
 
 // optional
 export const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN;

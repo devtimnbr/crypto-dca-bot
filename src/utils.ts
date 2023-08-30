@@ -39,27 +39,35 @@ export function removeLeadingWhitespace(input: string): string {
   return trimmedLines.join("\n");
 }
 
-export function getMinimumAmount(exchange: Exchange, market: Market, price: number): number {
-  console.log({ market, limits: market.limits });
-  if (market?.limits.amount?.min && !market.limits.cost?.min) {
-    // only amount min defined - just return amount min
-    console.log("// only amount min defined - just return amount min");
-    return exchange.amountToPrecision(market.symbol, market.limits.amount.min);
-  } else if (market?.limits.cost?.min && market.limits.amount?.min) {
-    // Calculate min amount based on cost constraint
-    const minFromLimitCost = market.limits.cost.min / price;
-    // Calculate min amount based on amount constraint
-    const costFromLimitAmount = market.limits.amount.min * price;
-
-    // Ensure the calculated min amount is not lower than the amount constraint
-    return market.limits.cost.min > costFromLimitAmount
-      ? exchange.amountToPrecision(market.symbol, minFromLimitCost)
-      : exchange.amountToPrecision(market.symbol, market.limits.amount.min);
-  } else if (DCA_AMOUNT) {
+export function getMinimumQuoteAmount(exchange: Exchange, market: Market, price: number): number {
+  if (DCA_AMOUNT) {
+    console.log("using dca_amount");
     // check for env var
     return Number(DCA_AMOUNT);
+  } else if (market?.limits.cost?.min && market.limits.amount?.min && market.precision.amount) {
+    // Calculate min amount based on cost constraint in quote currency
+    const minFromLimitCostInQuote = market.limits.cost.min;
+
+    // Calculate min amount based on amount constraint in base currency
+    const minFromLimitAmountInBase = market.limits.amount.min * price;
+
+    // Ensure the calculated min amount in base currency is not lower than the cost constraint
+    const minAmountInBase =
+      minFromLimitCostInQuote > minFromLimitAmountInBase ? minFromLimitCostInQuote : minFromLimitAmountInBase;
+
+    // Convert minAmount back to quote currency using precision
+    const minAmountInQuote = minAmountInBase / price;
+
+    // Round up the adjusted amount to the precision
+    const adjustedAmountCeiled =
+      Math.ceil(minAmountInQuote * Math.pow(10, market.precision.amount)) / Math.pow(10, market.precision.amount);
+
+    return exchange.amountToPrecision(market.symbol, adjustedAmountCeiled);
+  } else if (market?.limits.amount?.min && !market.limits.cost?.min) {
+    // only amount min defined - just return amount min
+    return exchange.amountToPrecision(market.symbol, market.limits.amount.min);
   } else {
-    console.log("The exchange did not provide the required data");
+    console.log("The exchange did not provide the required data. Maybe set the DCA_AMOUNT env var");
     process.exit();
   }
 }

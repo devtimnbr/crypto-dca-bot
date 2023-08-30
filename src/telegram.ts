@@ -1,7 +1,7 @@
-import { Balances } from "ccxt";
+import { Balances, Market } from "ccxt";
 import { Context, Telegraf } from "telegraf";
 import { exchange } from "./main";
-import { BASE_DECIMALS, DCA_AMOUNT, QUOTE_DECIMALS, TG_BOT_TOKEN, TG_CHAT_ID } from "./constants";
+import { TG_BOT_TOKEN, TG_CHAT_ID } from "./constants";
 import { dhm, removeLeadingWhitespace } from "./utils";
 
 export default class Telegram {
@@ -73,6 +73,7 @@ export default class Telegram {
     quoteTotal,
     nextOrderInMs,
     quote,
+    market,
   }: {
     base: string;
     price: number;
@@ -80,7 +81,7 @@ export default class Telegram {
     baseTotal: number;
     quoteTotal: number;
     nextOrderInMs: number;
-
+    market: Market;
     quote: string;
   }) {
     const budgetDepletedInMs = nextOrderInMs * (quoteTotal / amount / price);
@@ -91,8 +92,8 @@ export default class Telegram {
     <b>Got</b>: ${amount} ${base}
     <b>For</b>: ${(price * amount).toFixed(2)} ${quote}
 
-    <b>${base}</b>: ${baseTotal.toFixed(BASE_DECIMALS)} 
-    <b>${quote}</b>: ${quoteTotal.toFixed(QUOTE_DECIMALS + 2)}
+    <b>${base}</b>: ${baseTotal.toFixed(market.precision.amount)} 
+    <b>${quote}</b>: ${quoteTotal.toFixed(market.precision.price)}
 
     <b>Depleted at</b>: ${budgetDepletedAt.toLocaleDateString()}
     <b>Depleted in</b>: ${dhm(budgetDepletedInMs)}`);
