@@ -53,8 +53,9 @@ const tg = new Telegram();
 
     try {
       const amount = getMinimumAmount(exchange, market, price);
+      console.log({ amount });
       // place market order
-      await exchange.createOrder(PAIR, "market", "buy", amount);
+      await exchange.createOrder(PAIR, "market", "buy", amount, price);
 
       const balance = (await exchange.fetchBalance()) as Balances;
 

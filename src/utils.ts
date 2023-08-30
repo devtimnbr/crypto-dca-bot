@@ -40,8 +40,10 @@ export function removeLeadingWhitespace(input: string): string {
 }
 
 export function getMinimumAmount(exchange: Exchange, market: Market, price: number): number {
+  console.log({ market, limits: market.limits });
   if (market?.limits.amount?.min && !market.limits.cost?.min) {
     // only amount min defined - just return amount min
+    console.log("// only amount min defined - just return amount min");
     return exchange.amountToPrecision(market.symbol, market.limits.amount.min);
   } else if (market?.limits.cost?.min && market.limits.amount?.min) {
     // Calculate min amount based on cost constraint
