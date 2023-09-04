@@ -88,9 +88,9 @@ export default class Telegram {
     const budgetDepletedAt = new Date(Date.now() + budgetDepletedInMs);
 
     const msg = removeLeadingWhitespace(`🟩🟩
-
+    
     <b>Got</b>: ${amount} ${base}
-    <b>For</b>: ${(price * amount).toFixed(2)} ${quote}
+    <b>For</b>: ${(price * amount).toFixed(market.precision.price)} ${quote}
 
     <b>${base}</b>: ${baseTotal.toFixed(market.precision.amount)} 
     <b>${quote}</b>: ${quoteTotal.toFixed(market.precision.price)}
