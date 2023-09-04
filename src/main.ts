@@ -62,7 +62,7 @@ const tg = new Telegram();
         price,
         amount,
         baseTotal,
-        quoteTotal: exchange.costToPrecision(PAIR, quoteTotal),
+        quoteTotal,
         nextOrderInMs,
       });
 
