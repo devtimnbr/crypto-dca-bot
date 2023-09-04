@@ -1,16 +1,7 @@
 import ccxt, { Balances, Exchange } from "ccxt";
-import {
-  SANDBOX,
-  EXCHANGE_ID,
-  PUBLIC_KEY,
-  PRIVATE_KEY,
-  PAIR,
-  DCA_AMOUNT,
-  DCA_DURATION_IN_MS,
-  DCA_BUDGET,
-} from "./constants";
 import Telegram from "./telegram";
 import { sleep, dhm, printBanner, getMinimumQuoteAmount } from "./utils";
+import { SANDBOX, EXCHANGE_ID, PUBLIC_KEY, PRIVATE_KEY, PAIR, DCA_DURATION_IN_MS, DCA_BUDGET } from "./constants";
 
 const exchangeClass = ccxt[EXCHANGE_ID as keyof typeof ccxt] as typeof Exchange;
 
@@ -35,7 +26,7 @@ const tg = new Telegram();
   let isInsufficientFunds = false;
 
   // split pair example: BTC/USDT:USDT
-  const [base, quote] = PAIR?.split(":")[0].split("/");
+  const [base, quote] = PAIR.split(":")[0].split("/");
 
   // required for formatting numbers
   const markets = await exchange.fetchMarkets();
@@ -49,12 +40,11 @@ const tg = new Telegram();
   while (true) {
     // Get current quote price in base currency
     const ticker = await exchange.fetchTicker(PAIR);
-    const price = ticker.last as number;
+    const price = ticker.bid;
+    const amount = getMinimumQuoteAmount(exchange, market, price);
 
     try {
-      const amount = getMinimumQuoteAmount(exchange, market, price);
-
-      // place market order
+      // place limit order
       await exchange.createOrder(PAIR, "limit", "buy", amount, price);
 
       const balance = (await exchange.fetchBalance()) as Balances;
@@ -65,7 +55,16 @@ const tg = new Telegram();
       // Calculate when to place next dca order
       const nextOrderInMs = Math.round(DCA_DURATION_IN_MS / (DCA_BUDGET / price / amount));
 
-      tg.sendBuyMessage({ market, base, quote, price, amount, baseTotal, quoteTotal, nextOrderInMs });
+      tg.sendBuyMessage({
+        market,
+        base,
+        quote,
+        price,
+        amount,
+        baseTotal,
+        quoteTotal: exchange.costToPrecision(PAIR, quoteTotal),
+        nextOrderInMs,
+      });
 
       console.log(
         `Waiting ${dhm(nextOrderInMs)} until ${new Date(Date.now() + nextOrderInMs).toLocaleString()} for next order`

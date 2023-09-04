@@ -22,7 +22,7 @@ export const PRIVATE_KEY = env.PRIVATE_KEY;
 export const PAIR = env.PAIR;
 export const DCA_DURATION_IN_MS = env.DCA_DURATION_IN_MS;
 export const DCA_BUDGET = env.DCA_BUDGET;
-export const DCA_AMOUNT = process.env.DCA_AMOUNT;
+export const DCA_AMOUNT = Number(process.env.DCA_AMOUNT);
 
 // optional
 export const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN;
