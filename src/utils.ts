@@ -50,6 +50,16 @@ export function getDecimals(num: number): number {
   return decimalIndex === -1 ? 0 : str.length - decimalIndex - 1;
 }
 
+export function formatNumberWithPrecision(number: number, precision: number | undefined): string {
+  let decimalPlaces = precision == undefined ? 2 : precision;
+
+  if (decimalPlaces > 0 && decimalPlaces < 1) {
+    decimalPlaces = getDecimals(decimalPlaces);
+  }
+
+  return number.toFixed(decimalPlaces);
+}
+
 export function getMinimumQuoteAmount(exchange: Exchange, market: Market, price: number): number {
   if (DCA_AMOUNT && DCA_AMOUNT > 0) {
     // If DCA_AMOUNT is defined, use it as the quote amount
