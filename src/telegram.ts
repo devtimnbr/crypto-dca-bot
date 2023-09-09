@@ -2,7 +2,7 @@ import { Balances, Market } from "ccxt";
 import { Context, Telegraf } from "telegraf";
 import { exchange } from "./main";
 import { TG_BOT_TOKEN, TG_CHAT_ID } from "./constants";
-import { dhm, removeLeadingWhitespace } from "./utils";
+import { dhm, formatNumberWithPrecision, removeLeadingWhitespace } from "./utils";
 
 export default class Telegram {
   tg: Telegraf<Context> | undefined;
@@ -56,7 +56,7 @@ export default class Telegram {
     }
 
     try {
-      this.tg.telegram.sendMessage(this.chatId, msg, {
+      await this.tg.telegram.sendMessage(this.chatId, msg, {
         parse_mode: "HTML",
       });
     } catch (error) {
@@ -90,14 +90,14 @@ export default class Telegram {
     const msg = removeLeadingWhitespace(`🟩🟩
     
     <b>Got</b>: ${amount} ${base}
-    <b>For</b>: ${(price * amount).toFixed(market.precision.price)} ${quote}
+    <b>For</b>: ${formatNumberWithPrecision(price * amount, market.precision.price)} ${quote}
 
-    <b>${base}</b>: ${baseTotal.toFixed(market.precision.amount)} 
-    <b>${quote}</b>: ${quoteTotal.toFixed(market.precision.price)}
+    <b>${base}</b>: ${formatNumberWithPrecision(baseTotal, market.precision.amount)} 
+    <b>${quote}</b>: ${formatNumberWithPrecision(quoteTotal, market.precision.price)}
 
     <b>Depleted at</b>: ${budgetDepletedAt.toLocaleDateString()}
     <b>Depleted in</b>: ${dhm(budgetDepletedInMs)}`);
 
-    this.sendMessage(msg, true);
+    await this.sendMessage(msg, true);
   }
 }

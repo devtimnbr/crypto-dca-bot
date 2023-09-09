@@ -43,11 +43,42 @@ export function removeLeadingWhitespace(input: string): string {
   return trimmedLines.join("\n");
 }
 
-// get decimals for a string like "0.001" -> 3
-export function getDecimals(num: number): number {
+export function getDecimalsFromFloat(num: number): number {
   const str = num.toString();
-  const decimalIndex = str.indexOf(".");
-  return decimalIndex === -1 ? 0 : str.length - decimalIndex - 1;
+
+  // Check if the number is in scientific notation.
+  if (str.includes("e-")) {
+    const m = str.split("e-")[1];
+    return Number(m); // Return 0 for scientific notation numbers.
+  }
+
+  // Extract the decimal part from the string.
+  const decimalPart = str.split(".")[1];
+
+  // If there's no decimal part or if it's all zeros, return 0.
+  if (!decimalPart || /^0+$/.test(decimalPart)) {
+    return 0;
+  }
+
+  // Count the number of decimal places (including trailing zeros).
+  return decimalPart.length;
+}
+
+export function formatNumberWithPrecision(number: number, precision: number | undefined): string {
+  let decimalPlaces = precision == undefined ? 2 : precision;
+
+  if ((decimalPlaces >= 0 && decimalPlaces < 1) || decimalPlaces.toString().includes("e-")) {
+    // Get the count of non-zero decimal places without removing trailing zeros.
+    decimalPlaces = getDecimalsFromFloat(decimalPlaces);
+  }
+
+  // Format the number with the specified precision.
+  let formattedNumber = number.toFixed(decimalPlaces);
+
+  // Remove trailing zeros using a regular expression.
+  formattedNumber = formattedNumber.replace(/\.?0*$/, "");
+
+  return formattedNumber;
 }
 
 export function getMinimumQuoteAmount(exchange: Exchange, market: Market, price: number): number {
@@ -70,7 +101,8 @@ export function getMinimumQuoteAmount(exchange: Exchange, market: Market, price:
     const minQuoteAmount = minBaseAmount / price;
 
     // Round up the adjusted amount to the precision
-    const decimals = market.precision.amount >= 1 ? market.precision.amount : getDecimals(market.precision.amount);
+    const decimals =
+      market.precision.amount >= 1 ? market.precision.amount : getDecimalsFromFloat(market.precision.amount);
     const minQuoteAmountCeiled = Math.ceil(minQuoteAmount * Math.pow(10, decimals)) / Math.pow(10, decimals);
 
     return exchange.amountToPrecision(market.symbol, minQuoteAmountCeiled);
