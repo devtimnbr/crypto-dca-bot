@@ -20,7 +20,7 @@ Using a custom DCA script like this one provides flexibility in choosing your ow
 
 To use this script, you will need:
 
-- Node.js v16 or later
+- bun 1.0 or later [bun.sh](https://bun.sh)
 - An account on a supported exchange with API keys. [Here](https://github.com/ccxt/ccxt#supported-cryptocurrency-exchange-markets) is a list of supported exchanges.
 
 ## Configuration
@@ -46,10 +46,10 @@ The following environment variables are required:
 ## Installation
 
 1. Clone this repository.
-2. Install dependencies: `npm install`
+2. Install dependencies: `bun install`
 3. Create a `.env` file with your exchange API keys and other environment variables (see `.env.example` for an example).
-4. Build the script: `npm run build`
-5. Start the script: `npm run start`
+4. Build the script: `bun run build`
+5. Start the script: `bun run start`
 
 ### Installation with Docker
 

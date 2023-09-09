@@ -1,16 +1,17 @@
-FROM node:16-alpine
+FROM oven/bun
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json ./
+COPY bun.lockb ./
 
-RUN npm install
+RUN bun install
 
 COPY . .
 
-RUN npm run build
+RUN bun run build
 
-USER node
+USER bun
 
-CMD ["npm", "start"]
+CMD ["bun", "run", "start"]
 

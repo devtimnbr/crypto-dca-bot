@@ -1,3 +1,4 @@
+import { describe, test, expect } from "bun:test";
 import { getDecimalsFromFloat } from "../src/utils";
 
 describe("getDecimalsFromFloat Function", () => {

@@ -1,3 +1,4 @@
+import { expect, test, describe } from "bun:test";
 import { formatNumberWithPrecision } from "../src/utils";
 
 describe("Number Formatting for Telegram", () => {

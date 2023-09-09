@@ -1,8 +1,5 @@
 import ccxt from "ccxt";
-import dotenv from "dotenv";
 import { cleanEnv, str, bool, num } from "envalid";
-
-dotenv.config();
 
 // validate env vars
 const env = cleanEnv(process.env, {

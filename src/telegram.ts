@@ -12,7 +12,7 @@ export default class Telegram {
     const botToken = TG_BOT_TOKEN;
     const chatId = TG_CHAT_ID;
 
-    if (!botToken || !chatId) {
+    if (botToken.length < 43 || botToken.length > 45 || !chatId) {
       console.log("No TG_BOT_TOKEN or TG_CHAT_ID provided in environment variables");
       return;
     }
@@ -51,7 +51,7 @@ export default class Telegram {
       console.log(msg);
     }
 
-    if (!this.tg) {
+    if (this.tg === undefined) {
       return;
     }
 
@@ -61,7 +61,7 @@ export default class Telegram {
       });
     } catch (error) {
       // telegram could be down: just log and dont throw error - bot should continue for next buy
-      console.log("Error sending telegram message:", error);
+      console.log("Error sending telegram message:");
     }
   }
 
