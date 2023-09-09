@@ -56,7 +56,7 @@ export default class Telegram {
     }
 
     try {
-      this.tg.telegram.sendMessage(this.chatId, msg, {
+      await this.tg.telegram.sendMessage(this.chatId, msg, {
         parse_mode: "HTML",
       });
     } catch (error) {
@@ -98,6 +98,6 @@ export default class Telegram {
     <b>Depleted at</b>: ${budgetDepletedAt.toLocaleDateString()}
     <b>Depleted in</b>: ${dhm(budgetDepletedInMs)}`);
 
-    this.sendMessage(msg, true);
+    await this.sendMessage(msg, true);
   }
 }

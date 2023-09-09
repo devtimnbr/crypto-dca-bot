@@ -51,7 +51,6 @@ const tg = new Telegram();
 
       const baseTotal = Number(balance[base].total);
       const quoteTotal = Number(balance[quote].total);
-
       // Calculate when to place next dca order
       const nextOrderInMs = Math.round(DCA_DURATION_IN_MS / (DCA_BUDGET / price / amount));
 

@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "build": "jest && tsc",
-    "start": "node dist/main.js"
+    "start": "node dist/src/main.js"
   },
   "license": "MIT",
   "dependencies": {
