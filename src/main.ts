@@ -2,6 +2,7 @@ import ccxt, { Balances, Exchange } from "ccxt";
 import Telegram from "./telegram";
 import { sleep, dhm, printBanner, getMinimumQuoteAmount } from "./utils";
 import { SANDBOX, EXCHANGE_ID, PUBLIC_KEY, PRIVATE_KEY, PAIR, DCA_DURATION_IN_MS, DCA_BUDGET } from "./constants";
+import db from "./db";
 
 const exchangeClass = ccxt[EXCHANGE_ID as keyof typeof ccxt] as typeof Exchange;
 
@@ -45,7 +46,7 @@ const tg = new Telegram();
 
     try {
       // place limit order
-      await exchange.createOrder(PAIR, "limit", "buy", amount, price);
+      const trade = await exchange.createOrder(PAIR, "limit", "buy", amount, price);
 
       const balance = (await exchange.fetchBalance()) as Balances;
 
@@ -64,6 +65,8 @@ const tg = new Telegram();
         quoteTotal,
         nextOrderInMs,
       });
+
+      db.insertTrade(trade);
 
       console.log(
         `Waiting ${dhm(nextOrderInMs)} until ${new Date(Date.now() + nextOrderInMs).toLocaleString()} for next order`
