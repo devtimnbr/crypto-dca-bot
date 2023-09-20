@@ -24,3 +24,6 @@ export const DCA_AMOUNT = Number(process.env.DCA_AMOUNT);
 // optional
 export const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN;
 export const TG_CHAT_ID = process.env.TG_CHAT_ID;
+
+// utils
+export const [BASE_SYMBOL, QUOTE_SYMBOL] = PAIR.split(":")[0].split("/");

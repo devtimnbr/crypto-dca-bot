@@ -1,7 +1,17 @@
 import ccxt, { Balances, Exchange } from "ccxt";
 import Telegram from "./telegram";
 import { sleep, dhm, printBanner, getMinimumQuoteAmount } from "./utils";
-import { SANDBOX, EXCHANGE_ID, PUBLIC_KEY, PRIVATE_KEY, PAIR, DCA_DURATION_IN_MS, DCA_BUDGET } from "./constants";
+import {
+  SANDBOX,
+  EXCHANGE_ID,
+  PUBLIC_KEY,
+  PRIVATE_KEY,
+  PAIR,
+  DCA_DURATION_IN_MS,
+  DCA_BUDGET,
+  BASE_SYMBOL,
+  QUOTE_SYMBOL,
+} from "./constants";
 import db from "./db";
 
 const exchangeClass = ccxt[EXCHANGE_ID as keyof typeof ccxt] as typeof Exchange;
@@ -26,9 +36,6 @@ const tg = new Telegram();
 
   let isInsufficientFunds = false;
 
-  // split pair example: BTC/USDT:USDT
-  const [base, quote] = PAIR.split(":")[0].split("/");
-
   // required for formatting numbers
   const markets = await exchange.fetchMarkets();
   const market = markets.find((el) => el.symbol === PAIR);
@@ -50,15 +57,14 @@ const tg = new Telegram();
 
       const balance = (await exchange.fetchBalance()) as Balances;
 
-      const baseTotal = Number(balance[base].total);
-      const quoteTotal = Number(balance[quote].total);
+      // TO-DO: fix balance calc if limit order isnt filled
+      const baseTotal = Number(balance[BASE_SYMBOL].total);
+      const quoteTotal = Number(balance[QUOTE_SYMBOL].total);
       // Calculate when to place next dca order
       const nextOrderInMs = Math.round(DCA_DURATION_IN_MS / (DCA_BUDGET / price / amount));
 
       tg.sendBuyMessage({
         market,
-        base,
-        quote,
         price,
         amount,
         baseTotal,

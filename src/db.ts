@@ -6,7 +6,7 @@ class Db {
   db: Database;
 
   constructor() {
-    this.db = new Database("db.sqlite", { create: true });
+    this.db = new Database("data/db.sqlite", { create: true });
     this.createTable();
   }
 
@@ -48,7 +48,17 @@ class Db {
     return this.db.prepare("SELECT * FROM trades").all();
   }
 
-  calculateAvgPrice() {
+  countTradesAll() {
+    return this.db.prepare("SELECT COUNT(*) AS count FROM trades").get() as { count: number };
+  }
+
+  countTradesSymbol(symbol: string) {
+    return this.db.query("SELECT COUNT(*) AS count FROM trades WHERE symbol = $symbol").get({ $symbol: symbol }) as {
+      count: number;
+    };
+  }
+
+  calculateAvgPriceAll() {
     return this.db
       .query(
         `
@@ -60,7 +70,19 @@ class Db {
       .all();
   }
 
-  calculateTotalAmount() {
+  calculateAvgPriceSymbol(symbol: string) {
+    return this.db
+      .query(
+        `
+            SELECT SUM(price * amount) / SUM(amount) AS avgPrice
+            FROM trades
+            WHERE symbol = $symbol
+        `
+      )
+      .get({ $symbol: symbol }) as { avgPrice: number };
+  }
+
+  calculateTotalAmountAll() {
     return this.db
       .prepare(
         `
@@ -72,7 +94,19 @@ class Db {
       .all();
   }
 
-  calculateTotalFeesAndPercentage() {
+  calculateTotalAmountSymbol(symbol: string) {
+    return this.db
+      .query(
+        `
+            SELECT SUM(amount) AS totalAmount
+            FROM trades
+            WHERE symbol = $symbol
+        `
+      )
+      .get({ $symbol: symbol }) as { totalAmount: number };
+  }
+
+  calculateTotalFeesAndPercentageAll() {
     return this.db
       .prepare(
         `
@@ -84,6 +118,20 @@ class Db {
         `
       )
       .all();
+  }
+
+  calculateTotalFeesAndPercentageSymbol(symbol: string) {
+    return this.db
+      .query(
+        `
+            SELECT 
+            SUM(fee) AS totalFees,
+            SUM(fee) * 100 / SUM(cost) AS feePercentage
+            FROM trades
+            WHERE symbol = $symbol
+        `
+      )
+      .get({ $symbol: symbol }) as { totalFees: number; feePercentage: number };
   }
 
   close() {

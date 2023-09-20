@@ -71,7 +71,7 @@ export function formatNumberWithPrecision(number: number, precision: number | un
     // Get the count of non-zero decimal places without removing trailing zeros.
     decimalPlaces = getDecimalsFromFloat(decimalPlaces);
   }
-
+  // TO-DO fix decimal places spaghetti
   // Format the number with the specified precision.
   let formattedNumber = number.toFixed(decimalPlaces);
 

@@ -64,7 +64,7 @@ docker build -t crypto-dca-bot .
 4. Start the Docker container:
 
 ```bash
-docker run -d --name crypto-dca-bot --env-file .env crypto-dca-bot
+docker run -d --name crypto-dca-bot --volume crypto-dca-bot-data --env-file .env crypto-dca-bot
 ```
 
 ### Installation with docker-compose
