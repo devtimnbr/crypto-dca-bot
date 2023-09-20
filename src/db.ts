@@ -27,21 +27,27 @@ class Db {
   }
 
   insertTrade(trade: Order) {
-    return this.db
-      .query(
-        `
+    // try catch just in case something is undefiend
+    try {
+      this.db
+        .query(
+          `
             INSERT INTO trades (symbol, side, price, cost, fee, amount)
             VALUES ($symbol, $side, $price, $cost, $fee, $amount)
         `
-      )
-      .values({
-        $symbol: PAIR,
-        $side: trade.side,
-        $price: trade.price,
-        $cost: trade.cost,
-        $fee: trade.fee.cost,
-        $amount: trade.amount,
-      });
+        )
+        .values({
+          $symbol: PAIR,
+          $side: trade.side,
+          $price: trade.price,
+          $cost: trade.cost,
+          // is udnefiend in some cases - could be fixed ig
+          $fee: trade.fee?.cost ? trade.fee?.cost : 0,
+          $amount: trade.amount,
+        });
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   getAllTrades() {
