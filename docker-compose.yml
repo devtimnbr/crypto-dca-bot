@@ -1,6 +1,10 @@
-version: "3.7"
-
 services:
   crypto-dca-bot:
     build: .
     restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - STATE_DIR=/app/data
+    volumes:
+      - ./data:/app/data

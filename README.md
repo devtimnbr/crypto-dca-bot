@@ -14,6 +14,17 @@ The script determines the optimal time to place the next order based on the user
 
 If the exchange account runs out of funds (quote currency), the script logs the issue and can send a notification via Telegram.
 
+## State Persistence
+
+The bot now includes state persistence to maintain the DCA schedule across restarts and rebuilds. The state is saved to a `bot-state.json` file that tracks:
+
+- Last order timestamp
+- Next scheduled order time
+
+When the bot restarts, it checks this file to determine whether an order should be placed immediately or if it should wait until the next scheduled time. This prevents duplicate orders when the container is rebuilt or the service is restarted.
+
+In Docker, the state file is stored in `/app/data` and mounted as a volume to persist across container updates.
+
 Using a custom DCA script like this one provides flexibility in choosing your own DCA strategy and enables you to bypass exchange-specific DCA fees. While many exchanges offer their own DCA features, they are often limited to specific cryptocurrencies and can come with fees that reduce your profits over time.
 
 ## Requirements
@@ -32,7 +43,8 @@ The following environment variables are required:
 - `PUBLIC_KEY`: Your exchange API public key.
 - `PRIVATE_KEY`: Your exchange API private key.
 - `PAIR`: The currency pair to trade (e.g. `BTC/EUR`).
-- `DCA_AMOUNT`: (OPTIONAL) The amount of crypto/currency (e.g., BTC) to accumulate per DCA order (e.g., 0.001). If not set, it will calculate the exchange-specific minimum order amount.
+- `MIN_QUOTE_AMOUNT`: (OPTIONAL) Minimum quote currency amount per order (e.g., 1 for 1 USDC). Use for exchanges with quote minimums.
+- `MIN_BASE_AMOUNT`: (OPTIONAL) Minimum base currency amount per order (e.g., 0.00001 for 0.00001 BTC). Use for exchanges with base minimums.
 - `DCA_BUDGET`: The total amount of quote currency (e.g. EUR) to use for DCA (e.g. `1000`).
 - `DCA_DURATION_IN_MS`: The duration of the dollar cost averaging (DCA) period in milliseconds (e.g. `2592000000` for 30 days).
 

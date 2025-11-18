@@ -31,3 +31,9 @@ bower_components
 
 # ignore the dist folder
 dist
+
+# ignore SQLite databases
+data/
+*.db
+*.sqlite
+*.sqlite3

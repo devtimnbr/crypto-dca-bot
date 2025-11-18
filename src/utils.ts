@@ -1,5 +1,5 @@
 import { Exchange, Market } from "ccxt";
-import { DCA_AMOUNT } from "./constants";
+import { Config } from "./config";
 
 export function printBanner(): void {
   console.log();
@@ -65,11 +65,38 @@ export function getDecimalsFromFloat(num: number): number {
 }
 
 export function formatNumberWithPrecision(number: number, precision: number | undefined): string {
-  let decimalPlaces = precision == undefined ? 2 : precision;
+  // Ensure we have a valid number
+  if (typeof number !== 'number' || !isFinite(number)) {
+    return '0';
+  }
 
-  if ((decimalPlaces >= 0 && decimalPlaces < 1) || decimalPlaces.toString().includes("e-")) {
-    // Get the count of non-zero decimal places without removing trailing zeros.
+  // Handle null/undefined precision or invalid precision
+  if (precision === null || precision === undefined || isNaN(Number(precision)) || typeof precision !== 'number') {
+    const formatted = number.toFixed(2).replace(/\.?0*$/, "");
+    return formatted;
+  }
+
+  // Convert to number
+  let decimalPlaces = Number(precision);
+
+  // Check if decimalPlaces is a valid finite number
+  if (!isFinite(decimalPlaces) || decimalPlaces < 0) {
+    decimalPlaces = 2;
+  }
+
+  // If it's a small decimal like 0.00001, convert to integer decimal places
+  if (decimalPlaces > 0 && decimalPlaces < 1) {
     decimalPlaces = getDecimalsFromFloat(decimalPlaces);
+  } else if (decimalPlaces.toString().includes("e-")) {
+    decimalPlaces = getDecimalsFromFloat(decimalPlaces);
+  }
+
+  // Ensure decimalPlaces is a non-negative integer
+  decimalPlaces = Math.max(0, Math.floor(decimalPlaces));
+
+  // Limit decimal places to a reasonable number
+  if (decimalPlaces > 20) {
+    decimalPlaces = 20;
   }
 
   // Format the number with the specified precision.
@@ -81,33 +108,46 @@ export function formatNumberWithPrecision(number: number, precision: number | un
   return formattedNumber;
 }
 
-export function getMinimumQuoteAmount(exchange: Exchange, market: Market, price: number): number {
-  if (DCA_AMOUNT && DCA_AMOUNT > 0) {
-    // If DCA_AMOUNT is defined, use it as the quote amount
-    return DCA_AMOUNT;
-  } else if (market?.limits.amount?.min && !market.limits.cost?.min) {
-    // If only minimum amount limit is defined, return the minimum amount
-    return exchange.amountToPrecision(market.symbol, market.limits.amount.min);
-  } else if (market?.limits.cost?.min && market.limits.amount?.min && market.precision.amount) {
-    // Calculate the minimum amount based on market limits
-    const minLimitBaseAmount = market.limits.cost.min;
-    const minLimitBaseAmountFromQuote = market.limits.amount.min * price;
+export function getMinimumBaseAmount(exchange: Exchange, market: Market, price: number): number {
+  const config = Config.getInstance().trading;
 
-    // Ensure the calculated min amount in base currency is not lower than the cost constraint
-    const minBaseAmount =
-      minLimitBaseAmount > minLimitBaseAmountFromQuote ? minLimitBaseAmount : minLimitBaseAmountFromQuote;
-
-    // Convert minAmount back to quote currency using precision
-    const minQuoteAmount = minBaseAmount / price;
-
-    // Round up the adjusted amount to the precision
-    const decimals =
-      market.precision.amount >= 1 ? market.precision.amount : getDecimalsFromFloat(market.precision.amount);
-    const minQuoteAmountCeiled = Math.ceil(minQuoteAmount * Math.pow(10, decimals)) / Math.pow(10, decimals);
-
-    return exchange.amountToPrecision(market.symbol, minQuoteAmountCeiled);
-  } else {
-    // If none of the conditions are met, throw an error and exit
-    throw new Error("The exchange did not provide the required data. Maybe set the DCA_AMOUNT env var");
+  // Priority 1: Use explicitly configured base amount
+  if (config.minBaseAmount && config.minBaseAmount > 0) {
+    return exchange.amountToPrecision(market.symbol, config.minBaseAmount);
   }
+
+  // Priority 2: Use MIN_QUOTE_AMOUNT and convert to base amount
+  if (config.minQuoteAmount && config.minQuoteAmount > 0) {
+    const baseAmount = config.minQuoteAmount / price;
+    const precision = market.precision.amount ?? 8; // Default to 8 if undefined
+    const decimals = precision >= 1 ? precision : getDecimalsFromFloat(precision);
+    const baseAmountCeiled = Math.ceil(baseAmount * Math.pow(10, decimals)) / Math.pow(10, decimals);
+    return exchange.amountToPrecision(market.symbol, baseAmountCeiled);
+  }
+
+  // Priority 3: Use exchange market limits
+  if (market?.limits.cost?.min) {
+    // Exchange has a minimum cost (quote) limit
+    const baseAmount = market.limits.cost.min / price;
+    const precision = market.precision.amount ?? 8; // Default to 8 if undefined
+    const decimals = precision >= 1 ? precision : getDecimalsFromFloat(precision);
+    const baseAmountCeiled = Math.ceil(baseAmount * Math.pow(10, decimals)) / Math.pow(10, decimals);
+
+    // Also ensure we meet the minimum amount limit if it exists
+    if (market?.limits.amount?.min) {
+      const minAmountLimit = market.limits.amount.min;
+      const finalAmount = Math.max(baseAmountCeiled, minAmountLimit);
+      return exchange.amountToPrecision(market.symbol, finalAmount);
+    }
+
+    return exchange.amountToPrecision(market.symbol, baseAmountCeiled);
+  }
+
+  // Priority 4: Use exchange minimum amount limit if no cost limit
+  if (market?.limits.amount?.min) {
+    return exchange.amountToPrecision(market.symbol, market.limits.amount.min);
+  }
+
+  // If none of the conditions are met, throw an error
+  throw new Error("Unable to determine minimum order amount. Please set MIN_QUOTE_AMOUNT or MIN_BASE_AMOUNT in your environment variables.");
 }
