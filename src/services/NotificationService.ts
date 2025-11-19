@@ -48,12 +48,13 @@ export class NotificationService {
         const balance = await this.tradingService.getBalance();
         const marketInfo = this.tradingService.getMarketInfo();
         
+        const config = Config.getInstance().trading;
         const message = removeLeadingWhitespace(`
           💼 <b>Current Balance</b> 💼
-          
+
           ━━━━━━━━━━━━━━━━━━
-          🪙 <b>${marketInfo.base}:</b> ${formatNumberWithPrecision(balance.baseTotal, marketInfo.market.precision?.amount || 8)}
-          💵 <b>${marketInfo.quote}:</b> ${formatNumberWithPrecision(balance.quoteTotal, marketInfo.market.precision?.price || 2)}
+          🪙 <b>${marketInfo.base}:</b> ${formatNumberWithPrecision(balance.baseTotal, config.baseCurrencyPrecision)}
+          💵 <b>${marketInfo.quote}:</b> ${formatNumberWithPrecision(balance.quoteTotal, config.quoteCurrencyPrecision)}
         `);
         
         this.sendMessage(message);
@@ -149,14 +150,14 @@ export class NotificationService {
 
       <b>📊 Order Details:</b>
       ━━━━━━━━━━━━━━━━━━
-      🛒 <b>Bought:</b> ${formatNumberWithPrecision(orderResult.amount, marketInfo.market.precision?.amount || 8)} ${marketInfo.base}
-      💵 <b>Cost:</b> ${formatNumberWithPrecision(orderResult.price * orderResult.amount, marketInfo.market.precision?.price || 2)} ${marketInfo.quote}
-      📍 <b>Price:</b> ${formatNumberWithPrecision(orderResult.price, marketInfo.market.precision?.price || 2)} ${marketInfo.quote}
+      🛒 <b>Bought:</b> ${formatNumberWithPrecision(orderResult.amount, config.baseCurrencyPrecision)} ${marketInfo.base}
+      💵 <b>Cost:</b> ${formatNumberWithPrecision(orderResult.cost, config.quoteCurrencyPrecision)} ${marketInfo.quote}
+      📍 <b>Price:</b> ${formatNumberWithPrecision(orderResult.price, config.quoteCurrencyPrecision)} ${marketInfo.quote}
 
       <b>🏦 Current Balance:</b>
       ━━━━━━━━━━━━━━━━━━
-      ${marketInfo.base}: ${formatNumberWithPrecision(orderResult.baseTotal, marketInfo.market.precision?.amount || 8)}
-      ${marketInfo.quote}: ${formatNumberWithPrecision(orderResult.quoteTotal, marketInfo.market.precision?.price || 2)}
+      ${marketInfo.base}: ${formatNumberWithPrecision(orderResult.baseTotal, config.baseCurrencyPrecision)}
+      ${marketInfo.quote}: ${formatNumberWithPrecision(orderResult.quoteTotal, config.quoteCurrencyPrecision)}
 
       <b>⏰ Budget Projection:</b>
       ━━━━━━━━━━━━━━━━━━

@@ -91,8 +91,8 @@ export class NotificationFormattingService {
 
         message += `🔸 *${dayName} ${dateStr}*\n`;
         message += `   Orders: ${dayStats.totalOrders} | `;
-        message += `Amount: ${formattedAmount} | `;
-        message += `Cost: ${formattedCost}\n\n`;
+        message += `Amount: ${formattedAmount} ${dayStats.baseCurrency} | `;
+        message += `Cost: ${formattedCost} ${dayStats.quoteCurrency}\n\n`;
       } else {
         message += `🔸 *${dayName} ${dateStr}*\n`;
         message += `   No orders\n\n`;
@@ -120,8 +120,8 @@ export class NotificationFormattingService {
 
         message += `🔸 *${monthStr}*\n`;
         message += `   Orders: ${monthStats.totalOrders} | `;
-        message += `Invested: ${formattedCost} | `;
-        message += `Bought: ${formattedAmount}\n\n`;
+        message += `Invested: ${formattedCost} ${monthStats.quoteCurrency} | `;
+        message += `Bought: ${formattedAmount} ${monthStats.baseCurrency}\n\n`;
       } else {
         message += `🔸 *${monthStr}*\n`;
         message += `   No orders\n\n`;
