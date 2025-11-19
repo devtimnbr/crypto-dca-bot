@@ -157,18 +157,36 @@ export class NotificationService {
     const marketInfo = this.tradingService.getMarketInfo();
     const config = Config.getInstance().trading;
 
+    // DEBUG: Log the raw orderResult values
+    console.log('DEBUG sendOrderNotification:', {
+      amount: orderResult.amount,
+      price: orderResult.price,
+      baseTotal: orderResult.baseTotal,
+      quoteTotal: orderResult.quoteTotal,
+      baseCurrencyPrecision: config.baseCurrencyPrecision
+    });
+
     // Calculate budget depletion based on remaining quote balance and this order's cost
     const orderCost = orderResult.amount * orderResult.price;
     const remainingOrders = Math.floor(orderResult.quoteTotal / orderCost);
     const budgetDepletedInMs = remainingOrders * orderResult.nextOrderInMs;
     const budgetDepletedAt = new Date(Date.now() + budgetDepletedInMs);
 
+    // DEBUG: Test the exact formatting being used
+    const precision = Math.max(config.baseCurrencyPrecision, 8);
+    const formattedAmount = formatNumberWithPrecision(orderResult.amount, precision);
+    console.log('DEBUG formatting:', {
+      rawAmount: orderResult.amount,
+      precision: precision,
+      formattedAmount: formattedAmount
+    });
+
     const message = removeLeadingWhitespace(`
       💰 <b>Purchase Completed</b> 💰
 
       <b>📊 Order Details:</b>
       ━━━━━━━━━━━━━━━━━━
-      🛒 <b>Bought:</b> ${formatNumberWithPrecision(orderResult.amount, Math.max(config.baseCurrencyPrecision, 8))} ${marketInfo.base}
+      🛒 <b>Bought:</b> ${formattedAmount} ${marketInfo.base}
       💵 <b>Cost:</b> ${formatNumberWithPrecision(orderResult.amount * orderResult.price, config.quoteCurrencyPrecision)} ${marketInfo.quote}
       📍 <b>Price:</b> ${formatNumberWithPrecision(orderResult.price, config.quoteCurrencyPrecision)} ${marketInfo.quote}
 
