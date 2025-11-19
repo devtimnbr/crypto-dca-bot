@@ -157,9 +157,9 @@ export class NotificationService {
     const marketInfo = this.tradingService.getMarketInfo();
     const config = Config.getInstance().trading;
 
-    // Calculate budget depletion based on remaining quote balance and average order size
-    const avgOrderSizeUsd = config.dcaBudget / (config.dcaDurationInMs / orderResult.nextOrderInMs);
-    const remainingOrders = Math.floor(orderResult.quoteTotal / avgOrderSizeUsd);
+    // Calculate budget depletion based on remaining quote balance and this order's cost
+    const orderCost = orderResult.amount * orderResult.price;
+    const remainingOrders = Math.floor(orderResult.quoteTotal / orderCost);
     const budgetDepletedInMs = remainingOrders * orderResult.nextOrderInMs;
     const budgetDepletedAt = new Date(Date.now() + budgetDepletedInMs);
 
