@@ -92,8 +92,9 @@ export class TradingService {
     const baseTotal = Number(balance[this.marketInfo.base].total);
     const quoteTotal = Number(balance[this.marketInfo.quote].total);
 
+    const orderCost = amount * orderPrice;
     const nextOrderInMs = Math.round(
-      config.dcaDurationInMs / (config.dcaBudget / orderPrice / amount)
+      (orderCost * config.dcaDurationInMs) / config.dcaBudget
     );
 
     const orderResult = {
