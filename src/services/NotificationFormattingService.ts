@@ -3,6 +3,7 @@ import { OrderRecord, OrderStats } from './DatabaseService';
 import { DailyStats, MonthlyStats } from './StatisticsService';
 import { formatNumberWithPrecision } from '../utils';
 import { Config } from '../config';
+import { MarketData } from '../types';
 
 export class NotificationFormattingService {
   private config: Config;
@@ -11,7 +12,7 @@ export class NotificationFormattingService {
     this.config = Config.getInstance();
   }
 
-  public formatGeneralStats(stats: OrderStats | null): string {
+  public formatGeneralStats(stats: OrderStats | null, marketData: MarketData | null = null): string {
     if (!stats) {
       return '📊 *No orders placed yet*\n\nStart the bot to begin tracking your DCA strategy!';
     }
@@ -36,6 +37,47 @@ export class NotificationFormattingService {
     message += `💼 **Current Holdings:**\n`;
     message += `🔸 ${stats.baseCurrency}: *${formattedBaseHoldings}*\n`;
     message += `🔸 ${stats.quoteCurrency}: *${formattedQuoteHoldings}*\n`;
+
+    // Add live market data if available
+    if (marketData) {
+      const currentPrice = formatNumberWithPrecision(marketData.currentPrice, quotePrecision);
+      const priceChange = marketData.priceChange24h;
+      const percentageChange = marketData.percentageChange24h;
+      const changeSymbol = percentageChange >= 0 ? '📈' : '📉';
+      const changeColor = percentageChange >= 0 ? '🟢' : '🔴';
+
+      // Calculate portfolio value
+      const portfolioValue = (stats.currentHoldings.base * marketData.currentPrice) + stats.currentHoldings.quote;
+      const formattedPortfolioValue = formatNumberWithPrecision(portfolioValue, quotePrecision);
+
+      // Calculate P&L
+      const totalInvestedValue = stats.currentHoldings.base * stats.averagePrice + stats.currentHoldings.quote;
+      const unrealizedPnL = portfolioValue - totalInvestedValue;
+      const pnLPercentage = totalInvestedValue > 0 ? (unrealizedPnL / totalInvestedValue) * 100 : 0;
+      const formattedPnL = formatNumberWithPrecision(unrealizedPnL, quotePrecision);
+      const formattedPnLPercentage = formatNumberWithPrecision(pnLPercentage, 2);
+      const pnLSymbol = unrealizedPnL >= 0 ? '🟢' : '🔴';
+
+      // Calculate distance from average price
+      const distanceFromAvg = marketData.currentPrice > 0 ? ((marketData.currentPrice - stats.averagePrice) / stats.averagePrice) * 100 : 0;
+      const distanceSymbol = distanceFromAvg >= 0 ? '📈' : '📉';
+      const formattedDistance = formatNumberWithPrecision(Math.abs(distanceFromAvg), 2);
+
+      message += `\n💹 **Live Market Data:**\n`;
+      message += `💵 Current Price: *${currentPrice} ${stats.quoteCurrency}*\n`;
+      message += `${changeSymbol} 24h Change: *${changeColor} ${formatNumberWithPrecision(priceChange, quotePrecision)} (${formatNumberWithPrecision(percentageChange, 2)}%)*\n`;
+      if (marketData.high24h > 0 && marketData.low24h > 0) {
+        message += `📊 24h Range: *${formatNumberWithPrecision(marketData.low24h, quotePrecision)} - ${formatNumberWithPrecision(marketData.high24h, quotePrecision)} ${stats.quoteCurrency}*\n`;
+      }
+      if (marketData.volume24h > 0) {
+        message += `📈 24h Volume: *${formatNumberWithPrecision(marketData.volume24h, basePrecision)} ${stats.baseCurrency}*\n`;
+      }
+
+      message += `\n💼 **Portfolio Performance:**\n`;
+      message += `💰 Total Value: *${formattedPortfolioValue} ${stats.quoteCurrency}*\n`;
+      message += `${pnLSymbol} Unrealized P&L: *${formattedPnL} ${stats.quoteCurrency} (${formattedPnLPercentage}%)*\n`;
+      message += `${distanceSymbol} Distance from Avg: *${formattedDistance}%*\n`;
+    }
 
     return message;
   }
@@ -74,6 +116,7 @@ export class NotificationFormattingService {
 
     const basePrecision = this.config.trading.baseCurrencyPrecision;
     const quotePrecision = this.config.trading.quoteCurrencyPrecision;
+    const [baseCurrency, quoteCurrency] = this.config.trading.pair.split(":")[0].split("/");
 
     let message = `📅 *Daily Stats (Last ${days} days)*\n\n`;
 
@@ -91,8 +134,8 @@ export class NotificationFormattingService {
 
         message += `🔸 *${dayName} ${dateStr}*\n`;
         message += `   Orders: ${dayStats.totalOrders} | `;
-        message += `Amount: ${formattedAmount} | `;
-        message += `Cost: ${formattedCost}\n\n`;
+        message += `Amount: ${formattedAmount} ${baseCurrency} | `;
+        message += `Cost: ${formattedCost} ${quoteCurrency}\n\n`;
       } else {
         message += `🔸 *${dayName} ${dateStr}*\n`;
         message += `   No orders\n\n`;
@@ -107,6 +150,7 @@ export class NotificationFormattingService {
 
     const basePrecision = this.config.trading.baseCurrencyPrecision;
     const quotePrecision = this.config.trading.quoteCurrencyPrecision;
+    const [baseCurrency, quoteCurrency] = this.config.trading.pair.split(":")[0].split("/");
 
     for (let i = months - 1; i >= 0; i--) {
       const date = new Date();
@@ -120,8 +164,8 @@ export class NotificationFormattingService {
 
         message += `🔸 *${monthStr}*\n`;
         message += `   Orders: ${monthStats.totalOrders} | `;
-        message += `Invested: ${formattedCost} | `;
-        message += `Bought: ${formattedAmount}\n\n`;
+        message += `Invested: ${formattedCost} ${quoteCurrency} | `;
+        message += `Bought: ${formattedAmount} ${baseCurrency}\n\n`;
       } else {
         message += `🔸 *${monthStr}*\n`;
         message += `   No orders\n\n`;

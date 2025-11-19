@@ -1,8 +1,8 @@
 
 import ccxt, { Exchange, Market } from "ccxt";
 import { Config } from "../config";
-import { MarketInfo, OrderResult, BalanceInfo } from "../types";
-import { getMinimumBaseAmount } from "../utils";
+import { MarketInfo, OrderResult, BalanceInfo, MarketData } from "../types";
+import { getMinimumBaseAmount, formatNumberWithPrecision } from "../utils";
 import { DatabaseService } from "./DatabaseService";
 
 export class TradingService {
@@ -51,7 +51,7 @@ export class TradingService {
     const config = Config.getInstance().trading;
     const ticker = await this.exchange.fetchTicker(this.marketInfo.symbol);
     const price = ticker.bid;
-    const amount = getMinimumBaseAmount(this.exchange, this.marketInfo.market, price);
+    let amount = getMinimumBaseAmount(this.exchange, this.marketInfo.market, price);
 
     // Place order based on configured order type
     let orderPrice = price;
@@ -64,10 +64,27 @@ export class TradingService {
       // Market order - include price for exchanges that require it (like MEXC)
       const order = await this.exchange.createOrder(this.marketInfo.symbol, "market", "buy", amount, price);
       console.log(`Market order executed`);
-      // For market orders, use the actual executed price if available
+      // For market orders, use the actual executed price and amount if available
       if (order.price) {
         orderPrice = order.price;
         console.log(`Execution price: ${orderPrice} ${this.marketInfo.quote}`);
+      }
+      // Use the actual filled amount from exchange if available and reasonable
+      // Some exchanges may return incorrect values, so validate against the original request
+      const executedAmount = order.filled || amount;
+
+      // Basic sanity check: executed amount should be close to requested amount
+      // For small orders like this, we expect executed amount to be within reasonable bounds
+      const expectedUsdValue = executedAmount * orderPrice;
+      const originalAmount = getMinimumBaseAmount(this.exchange, this.marketInfo.market, price);
+
+      // If the executed amount value is way off from the expected order size, be suspicious
+      if (executedAmount > 0 && expectedUsdValue <= originalAmount * orderPrice * 10) {
+        amount = executedAmount;
+        console.log(`Order executed: ${amount} ${this.marketInfo.base} at ${orderPrice} ${this.marketInfo.quote} (${formatNumberWithPrecision(expectedUsdValue, 2)} ${this.marketInfo.quote})`);
+      } else {
+        console.log(`Warning: Executed amount seems unreasonable (${executedAmount} ${this.marketInfo.base} = ${formatNumberWithPrecision(expectedUsdValue, 2)} ${this.marketInfo.quote}), using requested amount ${originalAmount}`);
+        amount = originalAmount;
       }
     }
 
@@ -75,8 +92,9 @@ export class TradingService {
     const baseTotal = Number(balance[this.marketInfo.base].total);
     const quoteTotal = Number(balance[this.marketInfo.quote].total);
 
+    const orderCost = amount * orderPrice;
     const nextOrderInMs = Math.round(
-      config.dcaDurationInMs / (config.dcaBudget / orderPrice / amount)
+      (orderCost * config.dcaDurationInMs) / config.dcaBudget
     );
 
     const orderResult = {
@@ -107,6 +125,30 @@ export class TradingService {
       quote: this.marketInfo.quote,
       baseTotal,
       quoteTotal,
+    };
+  }
+
+  public async getCurrentTicker() {
+    if (!this.marketInfo) {
+      throw new Error("Trading service not initialized");
+    }
+    return await this.exchange.fetchTicker(this.marketInfo.symbol);
+  }
+
+  public async getMarketData(): Promise<MarketData> {
+    if (!this.marketInfo) {
+      throw new Error("Trading service not initialized");
+    }
+
+    const ticker = await this.exchange.fetchTicker(this.marketInfo.symbol);
+
+    return {
+      currentPrice: ticker.last || ticker.bid || 0,
+      priceChange24h: ticker.change || 0,
+      percentageChange24h: ticker.percentage || 0,
+      high24h: ticker.high || 0,
+      low24h: ticker.low || 0,
+      volume24h: ticker.baseVolume || 0,
     };
   }
 
