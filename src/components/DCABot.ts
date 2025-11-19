@@ -82,8 +82,8 @@ export class DCABot {
       console.log('Network error, retrying in 30 seconds');
       await sleep(30000);
     } else if (error.code === 'SQLITE_READONLY') {
-      console.error('Database is readonly, exiting process.');
-      process.exit(1);
+      console.error('Database is readonly. Please fix the file permissions. Retrying in 1 hour.');
+      await sleep(ONE_HOUR_IN_MS);
     }
     else {
       await sleep(FIVE_MINUTES_IN_MS);
