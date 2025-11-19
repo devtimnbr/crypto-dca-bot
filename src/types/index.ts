@@ -10,6 +10,8 @@ export interface TradingConfig {
   minQuoteAmount?: number;
   minBaseAmount?: number;
   orderType: 'market' | 'limit';
+  baseCurrencyPrecision: number;
+  quoteCurrencyPrecision: number;
 }
 
 export interface TelegramConfig {

@@ -1,17 +1,29 @@
+
 import { OrderRecord, OrderStats } from './DatabaseService';
 import { DailyStats, MonthlyStats } from './StatisticsService';
+import { formatNumberWithPrecision } from '../utils';
+import { Config } from '../config';
 
 export class NotificationFormattingService {
+  private config: Config;
+
+  constructor() {
+    this.config = Config.getInstance();
+  }
+
   public formatGeneralStats(stats: OrderStats | null): string {
     if (!stats) {
       return '📊 *No orders placed yet*\n\nStart the bot to begin tracking your DCA strategy!';
     }
 
-    const formattedAmount = this.formatNumber(stats.totalAmount);
-    const formattedCost = this.formatNumber(stats.totalCost);
-    const formattedAvgPrice = this.formatNumber(stats.averagePrice);
-    const formattedBaseHoldings = this.formatNumber(stats.currentHoldings.base);
-    const formattedQuoteHoldings = this.formatNumber(stats.currentHoldings.quote);
+    const basePrecision = this.config.trading.baseCurrencyPrecision;
+    const quotePrecision = this.config.trading.quoteCurrencyPrecision;
+
+    const formattedAmount = formatNumberWithPrecision(stats.totalAmount, basePrecision);
+    const formattedCost = formatNumberWithPrecision(stats.totalCost, quotePrecision);
+    const formattedAvgPrice = formatNumberWithPrecision(stats.averagePrice, quotePrecision);
+    const formattedBaseHoldings = formatNumberWithPrecision(stats.currentHoldings.base, basePrecision);
+    const formattedQuoteHoldings = formatNumberWithPrecision(stats.currentHoldings.quote, quotePrecision);
 
     let message = `📊 *Trading Statistics*\n\n`;
     message += `📈 **${stats.baseCurrency}/${stats.quoteCurrency}**\n`;
@@ -33,14 +45,17 @@ export class NotificationFormattingService {
       return '📋 *No recent orders*\n\nNo orders have been placed yet.';
     }
 
+    const basePrecision = this.config.trading.baseCurrencyPrecision;
+    const quotePrecision = this.config.trading.quoteCurrencyPrecision;
+
     let message = `📋 *Recent ${orders.length} Orders*\n\n`;
 
     for (const order of orders) {
       const date = new Date(order.timestamp).toLocaleDateString();
       const time = new Date(order.timestamp).toLocaleTimeString();
-      const formattedAmount = this.formatNumber(order.amount);
-      const formattedPrice = this.formatNumber(order.price);
-      const formattedCost = this.formatNumber(order.cost);
+      const formattedAmount = formatNumberWithPrecision(order.amount, basePrecision);
+      const formattedPrice = formatNumberWithPrecision(order.price, quotePrecision);
+      const formattedCost = formatNumberWithPrecision(order.cost, quotePrecision);
 
       message += `🔸 *${date} ${time}*\n`;
       message += `   Type: ${order.orderType.toUpperCase()}\n`;
@@ -57,6 +72,9 @@ export class NotificationFormattingService {
       return `📅 *No orders in the last ${days} days*`;
     }
 
+    const basePrecision = this.config.trading.baseCurrencyPrecision;
+    const quotePrecision = this.config.trading.quoteCurrencyPrecision;
+
     let message = `📅 *Daily Stats (Last ${days} days)*\n\n`;
 
     // Show last 7 days even if no orders
@@ -68,8 +86,8 @@ export class NotificationFormattingService {
 
       const dayStats = dailyData[dateStr];
       if (dayStats) {
-        const formattedAmount = this.formatNumber(dayStats.totalAmount);
-        const formattedCost = this.formatNumber(dayStats.totalCost);
+        const formattedAmount = formatNumberWithPrecision(dayStats.totalAmount, basePrecision);
+        const formattedCost = formatNumberWithPrecision(dayStats.totalCost, quotePrecision);
 
         message += `🔸 *${dayName} ${dateStr}*\n`;
         message += `   Orders: ${dayStats.totalOrders} | `;
@@ -87,6 +105,9 @@ export class NotificationFormattingService {
   public formatMonthlyStats(monthlyData: Record<string, MonthlyStats>, months: number): string {
     let message = `📊 *Monthly Performance (Last ${months} months)*\n\n`;
 
+    const basePrecision = this.config.trading.baseCurrencyPrecision;
+    const quotePrecision = this.config.trading.quoteCurrencyPrecision;
+
     for (let i = months - 1; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
@@ -94,8 +115,8 @@ export class NotificationFormattingService {
 
       const monthStats = monthlyData[monthStr];
       if (monthStats) {
-        const formattedAmount = this.formatNumber(monthStats.totalAmount);
-        const formattedCost = this.formatNumber(monthStats.totalCost);
+        const formattedAmount = formatNumberWithPrecision(monthStats.totalAmount, basePrecision);
+        const formattedCost = formatNumberWithPrecision(monthStats.totalCost, quotePrecision);
 
         message += `🔸 *${monthStr}*\n`;
         message += `   Orders: ${monthStats.totalOrders} | `;
@@ -109,14 +130,5 @@ export class NotificationFormattingService {
 
     return message;
   }
-
-  private formatNumber(num: number): string {
-    if (num >= 1000) {
-      return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    } else if (num >= 1) {
-      return num.toFixed(4).replace(/\.?0+$/, '');
-    } else {
-      return num.toFixed(8).replace(/\.?0+$/, '');
-    }
-  }
 }
+

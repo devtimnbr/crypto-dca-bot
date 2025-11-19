@@ -19,6 +19,8 @@ const env = cleanEnv(process.env, {
   ORDER_TYPE: str({ choices: ['market', 'limit'], default: 'market' }),
   TG_BOT_TOKEN: str({ default: "" }),
   TG_CHAT_ID: str({ default: "" }),
+  BASE_CURRENCY_PRECISION: num({ default: 8 }),
+  QUOTE_CURRENCY_PRECISION: num({ default: 2 }),
 });
 
 export class Config {
@@ -48,6 +50,8 @@ export class Config {
       minQuoteAmount: env.MIN_QUOTE_AMOUNT > 0 ? env.MIN_QUOTE_AMOUNT : undefined,
       minBaseAmount: env.MIN_BASE_AMOUNT > 0 ? env.MIN_BASE_AMOUNT : undefined,
       orderType: env.ORDER_TYPE as 'market' | 'limit',
+      baseCurrencyPrecision: env.BASE_CURRENCY_PRECISION,
+      quoteCurrencyPrecision: env.QUOTE_CURRENCY_PRECISION,
     };
 
     const telegram: TelegramConfig = {

@@ -44,68 +44,56 @@ export function removeLeadingWhitespace(input: string): string {
 }
 
 export function getDecimalsFromFloat(num: number): number {
+  if (Math.floor(num) === num) return 0; // Integer has no decimals
+
   const str = num.toString();
-
-  // Check if the number is in scientific notation.
   if (str.includes("e-")) {
-    const m = str.split("e-")[1];
-    return Number(m); // Return 0 for scientific notation numbers.
+    const exponent = parseInt(str.split("e-")[1], 10);
+    return exponent;
   }
 
-  // Extract the decimal part from the string.
   const decimalPart = str.split(".")[1];
-
-  // If there's no decimal part or if it's all zeros, return 0.
-  if (!decimalPart || /^0+$/.test(decimalPart)) {
-    return 0;
-  }
-
-  // Count the number of decimal places (including trailing zeros).
-  return decimalPart.length;
+  return decimalPart ? decimalPart.length : 0;
 }
 
-export function formatNumberWithPrecision(number: number, precision: number | undefined): string {
-  // Ensure we have a valid number
-  if (typeof number !== 'number' || !isFinite(number)) {
-    return '0';
+export function formatNumberWithPrecision(
+  number: number,
+  precision: number | undefined
+): string {
+  if (typeof number !== "number" || !isFinite(number)) {
+    return "0";
   }
 
-  // Handle null/undefined precision or invalid precision
-  if (precision === null || precision === undefined || isNaN(Number(precision)) || typeof precision !== 'number') {
-    const formatted = number.toFixed(2).replace(/\.?0*$/, "");
-    return formatted;
+  let actualPrecision: number;
+
+  if (
+    precision === null ||
+    precision === undefined ||
+    isNaN(Number(precision)) ||
+    typeof precision !== "number" ||
+    precision < 0
+  ) {
+    actualPrecision = 2; // Default precision
+  } else {
+    actualPrecision = Math.floor(precision);
   }
 
-  // Convert to number
-  let decimalPlaces = Number(precision);
-
-  // Check if decimalPlaces is a valid finite number
-  if (!isFinite(decimalPlaces) || decimalPlaces < 0) {
-    decimalPlaces = 2;
+  // Handle very small numbers for crypto amounts
+  if (number > 0 && number < 0.0001 && actualPrecision < 8) {
+    actualPrecision = 8;
   }
+  
+  // Format the number to a string with the determined precision.
+  let formattedNumber = number.toFixed(actualPrecision);
 
-  // If it's a small decimal like 0.00001, convert to integer decimal places
-  if (decimalPlaces > 0 && decimalPlaces < 1) {
-    decimalPlaces = getDecimalsFromFloat(decimalPlaces);
-  } else if (decimalPlaces.toString().includes("e-")) {
-    decimalPlaces = getDecimalsFromFloat(decimalPlaces);
-  }
+  // Remove trailing zeros and a trailing decimal point if present
+  formattedNumber = formattedNumber.replace(/\.?0+$/, "");
 
-  // Ensure decimalPlaces is a non-negative integer
-  decimalPlaces = Math.max(0, Math.floor(decimalPlaces));
+  // Add commas for thousands separator
+  const parts = formattedNumber.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-  // Limit decimal places to a reasonable number
-  if (decimalPlaces > 20) {
-    decimalPlaces = 20;
-  }
-
-  // Format the number with the specified precision.
-  let formattedNumber = number.toFixed(decimalPlaces);
-
-  // Remove trailing zeros using a regular expression.
-  formattedNumber = formattedNumber.replace(/\.?0*$/, "");
-
-  return formattedNumber;
+  return parts.join('.');
 }
 
 export function getMinimumBaseAmount(exchange: Exchange, market: Market, price: number): number {
