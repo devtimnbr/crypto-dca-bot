@@ -45,3 +45,12 @@ export interface BalanceInfo {
   baseTotal: number;
   quoteTotal: number;
 }
+
+export interface MarketData {
+  currentPrice: number;
+  priceChange24h: number;
+  percentageChange24h: number;
+  high24h: number;
+  low24h: number;
+  volume24h: number;
+}

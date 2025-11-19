@@ -1,6 +1,8 @@
 
 import { DatabaseService, OrderRecord, OrderStats } from './DatabaseService';
 import { NotificationFormattingService } from './NotificationFormattingService';
+import { TradingService } from './TradingService';
+import { MarketData } from '../types';
 
 export interface DailyStats {
   date: string;
@@ -22,11 +24,13 @@ export class StatisticsService {
   constructor(
     private db: DatabaseService,
     private formattingService: NotificationFormattingService,
+    private tradingService: TradingService,
   ) {}
 
   public async getGeneralStats(): Promise<string> {
     const stats = await this.db.getOrderStats();
-    return this.formattingService.formatGeneralStats(stats);
+    const marketData = await this.tradingService.getMarketData().catch(() => null); // Don't fail if market data unavailable
+    return this.formattingService.formatGeneralStats(stats, marketData);
   }
 
   public async getRecentOrders(limit: number = 5): Promise<string> {

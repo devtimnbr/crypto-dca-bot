@@ -1,7 +1,7 @@
 
 import ccxt, { Exchange, Market } from "ccxt";
 import { Config } from "../config";
-import { MarketInfo, OrderResult, BalanceInfo } from "../types";
+import { MarketInfo, OrderResult, BalanceInfo, MarketData } from "../types";
 import { getMinimumBaseAmount } from "../utils";
 import { DatabaseService } from "./DatabaseService";
 
@@ -107,6 +107,30 @@ export class TradingService {
       quote: this.marketInfo.quote,
       baseTotal,
       quoteTotal,
+    };
+  }
+
+  public async getCurrentTicker() {
+    if (!this.marketInfo) {
+      throw new Error("Trading service not initialized");
+    }
+    return await this.exchange.fetchTicker(this.marketInfo.symbol);
+  }
+
+  public async getMarketData(): Promise<MarketData> {
+    if (!this.marketInfo) {
+      throw new Error("Trading service not initialized");
+    }
+
+    const ticker = await this.exchange.fetchTicker(this.marketInfo.symbol);
+
+    return {
+      currentPrice: ticker.last || ticker.bid || 0,
+      priceChange24h: ticker.change || 0,
+      percentageChange24h: ticker.percentage || 0,
+      high24h: ticker.high || 0,
+      low24h: ticker.low || 0,
+      volume24h: ticker.baseVolume || 0,
     };
   }
 

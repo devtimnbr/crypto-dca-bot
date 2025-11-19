@@ -11,7 +11,7 @@ async function main(): Promise<void> {
     const databaseService = new DatabaseService();
     const tradingService = new TradingService(databaseService);
     const notificationFormattingService = new NotificationFormattingService();
-    const statisticsService = new StatisticsService(databaseService, notificationFormattingService);
+    const statisticsService = new StatisticsService(databaseService, notificationFormattingService, tradingService);
     const notificationService = new NotificationService(tradingService, statisticsService);
     
     const bot = new DCABot(
