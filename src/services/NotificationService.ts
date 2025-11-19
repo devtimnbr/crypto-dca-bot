@@ -47,8 +47,16 @@ export class NotificationService {
       try {
         const balance = await this.tradingService.getBalance();
         const marketInfo = this.tradingService.getMarketInfo();
-        const msg = `${marketInfo.base}: ${balance.baseTotal}\n${marketInfo.quote}: ${balance.quoteTotal}`;
-        this.sendMessage(msg);
+        
+        const message = removeLeadingWhitespace(`
+          💼 <b>Current Balance</b> 💼
+          
+          ━━━━━━━━━━━━━━━━━━
+          🪙 <b>${marketInfo.base}:</b> ${formatNumberWithPrecision(balance.baseTotal, marketInfo.market.precision?.amount || 8)}
+          💵 <b>${marketInfo.quote}:</b> ${formatNumberWithPrecision(balance.quoteTotal, marketInfo.market.precision?.price || 2)}
+        `);
+        
+        this.sendMessage(message);
       } catch (error) {
         this.sendMessage("❌ Error fetching balance");
       }
