@@ -51,7 +51,7 @@ export class TradingService {
     const config = Config.getInstance().trading;
     const ticker = await this.exchange.fetchTicker(this.marketInfo.symbol);
     const price = ticker.bid;
-    const amount = getMinimumBaseAmount(this.exchange, this.marketInfo.market, price);
+    let amount = getMinimumBaseAmount(this.exchange, this.marketInfo.market, price);
 
     // Place order based on configured order type
     let orderPrice = price;
@@ -64,10 +64,16 @@ export class TradingService {
       // Market order - include price for exchanges that require it (like MEXC)
       const order = await this.exchange.createOrder(this.marketInfo.symbol, "market", "buy", amount, price);
       console.log(`Market order executed`);
-      // For market orders, use the actual executed price if available
+      // For market orders, use the actual executed price and amount if available
       if (order.price) {
         orderPrice = order.price;
         console.log(`Execution price: ${orderPrice} ${this.marketInfo.quote}`);
+      }
+      // Use the actual filled amount if available, otherwise fall back to original amount
+      const executedAmount = order.filled || order.amount || amount;
+      if (executedAmount && executedAmount !== amount) {
+        amount = executedAmount;
+        console.log(`Actual executed amount: ${amount} ${this.marketInfo.base}`);
       }
     }
 

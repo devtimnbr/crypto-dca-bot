@@ -53,7 +53,7 @@ export class NotificationService {
           💼 <b>Current Balance</b> 💼
 
           ━━━━━━━━━━━━━━━━━━
-          🪙 <b>${marketInfo.base}:</b> ${formatNumberWithPrecision(balance.baseTotal, config.baseCurrencyPrecision)}
+          🪙 <b>${marketInfo.base}:</b> ${formatNumberWithPrecision(balance.baseTotal, Math.max(config.baseCurrencyPrecision, 8))}
           💵 <b>${marketInfo.quote}:</b> ${formatNumberWithPrecision(balance.quoteTotal, config.quoteCurrencyPrecision)}
         `);
         
@@ -150,13 +150,13 @@ export class NotificationService {
 
       <b>📊 Order Details:</b>
       ━━━━━━━━━━━━━━━━━━
-      🛒 <b>Bought:</b> ${formatNumberWithPrecision(orderResult.amount, config.baseCurrencyPrecision)} ${marketInfo.base}
+      🛒 <b>Bought:</b> ${formatNumberWithPrecision(orderResult.amount, Math.max(config.baseCurrencyPrecision, 8))} ${marketInfo.base}
       💵 <b>Cost:</b> ${formatNumberWithPrecision(orderResult.amount * orderResult.price, config.quoteCurrencyPrecision)} ${marketInfo.quote}
       📍 <b>Price:</b> ${formatNumberWithPrecision(orderResult.price, config.quoteCurrencyPrecision)} ${marketInfo.quote}
 
       <b>🏦 Current Balance:</b>
       ━━━━━━━━━━━━━━━━━━
-      ${marketInfo.base}: ${formatNumberWithPrecision(orderResult.baseTotal, config.baseCurrencyPrecision)}
+      ${marketInfo.base}: ${formatNumberWithPrecision(orderResult.baseTotal, Math.max(config.baseCurrencyPrecision, 8))}
       ${marketInfo.quote}: ${formatNumberWithPrecision(orderResult.quoteTotal, config.quoteCurrencyPrecision)}
 
       <b>⏰ Budget Projection:</b>
