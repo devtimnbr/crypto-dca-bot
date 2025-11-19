@@ -69,7 +69,7 @@ export class DCABot {
     }
   }
 
-  private async handleError(error: unknown): Promise<void> {
+  private async handleError(error: any): Promise<void> {
     console.error({ error });
 
     if (error instanceof ccxt.InsufficientFunds) {
@@ -81,6 +81,9 @@ export class DCABot {
     } else if (error instanceof ccxt.NetworkError) {
       console.log('Network error, retrying in 30 seconds');
       await sleep(30000);
+    } else if (error.code === 'SQLITE_READONLY') {
+      console.error('Database is readonly, exiting process.');
+      process.exit(1);
     }
     else {
       await sleep(FIVE_MINUTES_IN_MS);
