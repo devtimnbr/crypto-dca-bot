@@ -111,8 +111,8 @@ export class NotificationService {
 
     if (!this.telegram) return;
 
-    const maxRetries = 3;
-    const retryDelay = 1000; // 1 second
+    const maxRetries = 5; // Increase retries for network issues
+    const baseRetryDelay = 2000; // Start with 2 seconds
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       // Determine parse mode based on message content
@@ -121,18 +121,34 @@ export class NotificationService {
       try {
         await this.telegram.telegram.sendMessage(this.chatId, message, {
           parse_mode: parseMode,
+          disable_web_page_preview: true,
         });
         return; // Success, exit the retry loop
-      } catch (error) {
-        console.log(`Error sending Telegram message (attempt ${attempt}/${maxRetries}):`, error);
+      } catch (error: any) {
+        // Log only essential error info, not full stack trace for network errors
+        const isNetworkError = error.code === 'ECONNRESET' ||
+                              error.code === 'ECONNREFUSED' ||
+                              error.code === 'ETIMEDOUT' ||
+                              error.type === 'system';
+
+        if (isNetworkError) {
+          console.log(`Network error sending Telegram message (attempt ${attempt}/${maxRetries}): ${error.code || error.type}`);
+        } else {
+          console.log(`Error sending Telegram message (attempt ${attempt}/${maxRetries}): ${error.message || error}`);
+        }
 
         if (attempt === maxRetries) {
           console.log("Failed to send Telegram message after all retries");
           return;
         }
 
-        // Wait before retrying with exponential backoff
-        await new Promise(resolve => setTimeout(resolve, retryDelay * Math.pow(2, attempt - 1)));
+        // Calculate retry delay with exponential backoff and jitter
+        const exponentialDelay = baseRetryDelay * Math.pow(2, attempt - 1);
+        const jitter = Math.random() * 1000; // Add random jitter up to 1 second
+        const retryDelay = Math.min(exponentialDelay + jitter, 30000); // Cap at 30 seconds
+
+        console.log(`Retrying in ${Math.round(retryDelay/1000)} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
       }
     }
   }
@@ -141,8 +157,10 @@ export class NotificationService {
     const marketInfo = this.tradingService.getMarketInfo();
     const config = Config.getInstance().trading;
 
-    const budgetDepletedInMs = orderResult.nextOrderInMs *
-      (orderResult.quoteTotal / orderResult.amount / orderResult.price);
+    // Calculate budget depletion based on remaining quote balance and average order size
+    const avgOrderSizeUsd = config.dcaBudget / (config.dcaDurationInMs / orderResult.nextOrderInMs);
+    const remainingOrders = Math.floor(orderResult.quoteTotal / avgOrderSizeUsd);
+    const budgetDepletedInMs = remainingOrders * orderResult.nextOrderInMs;
     const budgetDepletedAt = new Date(Date.now() + budgetDepletedInMs);
 
     const message = removeLeadingWhitespace(`

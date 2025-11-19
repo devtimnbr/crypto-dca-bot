@@ -2,7 +2,7 @@
 import ccxt, { Exchange, Market } from "ccxt";
 import { Config } from "../config";
 import { MarketInfo, OrderResult, BalanceInfo, MarketData } from "../types";
-import { getMinimumBaseAmount } from "../utils";
+import { getMinimumBaseAmount, formatNumberWithPrecision } from "../utils";
 import { DatabaseService } from "./DatabaseService";
 
 export class TradingService {
@@ -69,11 +69,22 @@ export class TradingService {
         orderPrice = order.price;
         console.log(`Execution price: ${orderPrice} ${this.marketInfo.quote}`);
       }
-      // Use the actual filled amount if available, otherwise fall back to original amount
-      const executedAmount = order.filled || order.amount || amount;
-      if (executedAmount && executedAmount !== amount) {
+      // Use the actual filled amount from exchange if available and reasonable
+      // Some exchanges may return incorrect values, so validate against the original request
+      const executedAmount = order.filled || amount;
+
+      // Basic sanity check: executed amount should be close to requested amount
+      // For small orders like this, we expect executed amount to be within reasonable bounds
+      const expectedUsdValue = executedAmount * orderPrice;
+      const originalAmount = getMinimumBaseAmount(this.exchange, this.marketInfo.market, price);
+
+      // If the executed amount value is way off from the expected order size, be suspicious
+      if (executedAmount > 0 && expectedUsdValue <= originalAmount * orderPrice * 10) {
         amount = executedAmount;
-        console.log(`Actual executed amount: ${amount} ${this.marketInfo.base}`);
+        console.log(`Order executed: ${amount} ${this.marketInfo.base} at ${orderPrice} ${this.marketInfo.quote} (${formatNumberWithPrecision(expectedUsdValue, 2)} ${this.marketInfo.quote})`);
+      } else {
+        console.log(`Warning: Executed amount seems unreasonable (${executedAmount} ${this.marketInfo.base} = ${formatNumberWithPrecision(expectedUsdValue, 2)} ${this.marketInfo.quote}), using requested amount ${originalAmount}`);
+        amount = originalAmount;
       }
     }
 
