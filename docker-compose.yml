@@ -1,3 +1,4 @@
+
 services:
   crypto-dca-bot:
     build: .
@@ -7,4 +8,8 @@ services:
     environment:
       - STATE_DIR=/app/data
     volumes:
-      - ./data:/app/data
+      - dca-bot-data:/app/data
+
+volumes:
+  dca-bot-data:
+
