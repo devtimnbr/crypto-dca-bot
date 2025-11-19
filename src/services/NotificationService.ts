@@ -1,22 +1,20 @@
 import { Context, Telegraf } from "telegraf";
-import { Config } from "./config";
-import { TradingService } from "./trading";
-import { StatisticsService } from "./statistics";
-import { dhm, formatNumberWithPrecision, removeLeadingWhitespace } from "./utils";
-import { OrderResult, BalanceInfo } from "./types";
+import { Config } from "../config";
+import { TradingService } from "./TradingService";
+import { StatisticsService } from "./StatisticsService";
+import { dhm, formatNumberWithPrecision, removeLeadingWhitespace } from "../utils";
+import { OrderResult, BalanceInfo } from "../types";
 
 export class NotificationService {
   private telegram: Telegraf<Context> | undefined;
   private chatId: string = "";
-  private tradingService: TradingService;
-  private statsService: StatisticsService;
 
-  constructor(tradingService: TradingService) {
-    this.tradingService = tradingService;
-    this.statsService = StatisticsService.getInstance();
+  constructor(
+    private tradingService: TradingService,
+    private statsService: StatisticsService,
+  ) {
     this.initializeTelegram();
   }
-
   private initializeTelegram(): void {
     const config = Config.getInstance().telegram;
     
@@ -31,6 +29,7 @@ export class NotificationService {
     this.telegram.launch();
     this.sendMessage("🤖 Crypto DCA Bot v2 started...");
   }
+
 
   private setupCommands(): void {
     if (!this.telegram) return;

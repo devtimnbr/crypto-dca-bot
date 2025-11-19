@@ -1,21 +1,22 @@
-import { TradingService } from "./trading";
-import { NotificationService } from "./notifications";
-import { Config } from "./config";
-import { DatabaseService } from "./database";
-import { sleep, dhm, printBanner } from "./utils";
+
+import { TradingService } from "../services/TradingService";
+import { NotificationService } from "../services/NotificationService";
+import { Config } from "../config";
+import { DatabaseService } from "../services/DatabaseService";
+import { sleep, dhm, printBanner } from "../utils";
 import ccxt from "ccxt";
 
+const ONE_HOUR_IN_MS = 60 * 60 * 1000;
+const FIVE_MINUTES_IN_MS = 5 * 60 * 1000;
+
 export class DCABot {
-  private tradingService: TradingService;
-  private notificationService: NotificationService;
-  private database: DatabaseService;
   private isInsufficientFunds = false;
 
-  constructor() {
-    this.tradingService = new TradingService();
-    this.notificationService = new NotificationService(this.tradingService);
-    this.database = DatabaseService.getInstance();
-  }
+  constructor(
+    private tradingService: TradingService,
+    private notificationService: NotificationService,
+    private database: DatabaseService,
+  ) {}
 
   public async start(): Promise<void> {
     printBanner();
@@ -76,9 +77,13 @@ export class DCABot {
         await this.notificationService.sendInsufficientFundsNotification();
         this.isInsufficientFunds = true;
       }
-      await sleep(1000 * 60 * 60); // 1 hour
-    } else {
-      await sleep(1000 * 60 * 5); // 5 minutes
+      await sleep(ONE_HOUR_IN_MS);
+    } else if (error instanceof ccxt.NetworkError) {
+      console.log('Network error, retrying in 30 seconds');
+      await sleep(30000);
+    }
+    else {
+      await sleep(FIVE_MINUTES_IN_MS);
     }
   }
 }

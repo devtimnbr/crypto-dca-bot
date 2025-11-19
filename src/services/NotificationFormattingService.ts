@@ -1,49 +1,8 @@
-import { DatabaseService, OrderRecord, OrderStats } from './database';
-import { Config } from './config';
+import { OrderRecord, OrderStats } from './DatabaseService';
+import { DailyStats, MonthlyStats } from './StatisticsService';
 
-export interface DailyStats {
-  date: string;
-  totalOrders: number;
-  totalAmount: number;
-  totalCost: number;
-  averagePrice: number;
-}
-
-export interface MonthlyStats {
-  month: string;
-  totalOrders: number;
-  totalAmount: number;
-  totalCost: number;
-  averagePrice: number;
-}
-
-export interface YearlyStats {
-  year: string;
-  totalOrders: number;
-  totalAmount: number;
-  totalCost: number;
-  averagePrice: number;
-}
-
-export class StatisticsService {
-  private static instance: StatisticsService;
-  private db: DatabaseService;
-
-  private constructor() {
-    this.db = DatabaseService.getInstance();
-  }
-
-  public static getInstance(): StatisticsService {
-    if (!StatisticsService.instance) {
-      StatisticsService.instance = new StatisticsService();
-    }
-    return StatisticsService.instance;
-  }
-
-  public async getGeneralStats(): Promise<string> {
-    const stats = await this.db.getOrderStats();
-    const config = Config.getInstance().trading;
-
+export class NotificationFormattingService {
+  public formatGeneralStats(stats: OrderStats | null): string {
     if (!stats) {
       return '📊 *No orders placed yet*\n\nStart the bot to begin tracking your DCA strategy!';
     }
@@ -69,9 +28,7 @@ export class StatisticsService {
     return message;
   }
 
-  public async getRecentOrders(limit: number = 5): Promise<string> {
-    const orders = await this.db.getRecentOrders(limit);
-
+  public formatRecentOrders(orders: OrderRecord[]): string {
     if (orders.length === 0) {
       return '📋 *No recent orders*\n\nNo orders have been placed yet.';
     }
@@ -95,14 +52,7 @@ export class StatisticsService {
     return message;
   }
 
-  public async getDailyStats(days: number = 7): Promise<string> {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - days + 1);
-
-    const orders = await this.db.getOrdersInDateRange(startDate, endDate);
-    const dailyData = this.groupOrdersByDate(orders);
-
+  public formatDailyStats(dailyData: Record<string, DailyStats>, days: number): string {
     if (Object.keys(dailyData).length === 0) {
       return `📅 *No orders in the last ${days} days*`;
     }
@@ -120,7 +70,6 @@ export class StatisticsService {
       if (dayStats) {
         const formattedAmount = this.formatNumber(dayStats.totalAmount);
         const formattedCost = this.formatNumber(dayStats.totalCost);
-        const formattedAvgPrice = this.formatNumber(dayStats.averagePrice);
 
         message += `🔸 *${dayName} ${dateStr}*\n`;
         message += `   Orders: ${dayStats.totalOrders} | `;
@@ -135,21 +84,7 @@ export class StatisticsService {
     return message;
   }
 
-  public async getMonthlyStats(months: number = 6): Promise<string> {
-    const stats = await this.db.getOrderStats();
-
-    if (!stats) {
-      return '📅 *No orders placed yet*';
-    }
-
-    // Get all orders to group by month
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setMonth(endDate.getMonth() - months + 1);
-
-    const orders = await this.db.getOrdersInDateRange(startDate, endDate);
-    const monthlyData = this.groupOrdersByMonth(orders);
-
+  public formatMonthlyStats(monthlyData: Record<string, MonthlyStats>, months: number): string {
     let message = `📊 *Monthly Performance (Last ${months} months)*\n\n`;
 
     for (let i = months - 1; i >= 0; i--) {
@@ -161,7 +96,6 @@ export class StatisticsService {
       if (monthStats) {
         const formattedAmount = this.formatNumber(monthStats.totalAmount);
         const formattedCost = this.formatNumber(monthStats.totalCost);
-        const formattedAvgPrice = this.formatNumber(monthStats.averagePrice);
 
         message += `🔸 *${monthStr}*\n`;
         message += `   Orders: ${monthStats.totalOrders} | `;
@@ -176,67 +110,12 @@ export class StatisticsService {
     return message;
   }
 
-  private groupOrdersByDate(orders: OrderRecord[]): Record<string, DailyStats> {
-    const grouped: Record<string, DailyStats> = {};
-
-    for (const order of orders) {
-      const date = new Date(order.timestamp).toLocaleDateString();
-
-      if (!grouped[date]) {
-        grouped[date] = {
-          date,
-          totalOrders: 0,
-          totalAmount: 0,
-          totalCost: 0,
-          averagePrice: 0
-        };
-      }
-
-      const dayStats = grouped[date];
-      dayStats.totalOrders++;
-      dayStats.totalAmount += order.amount;
-      dayStats.totalCost += order.cost;
-      dayStats.averagePrice = dayStats.totalCost / dayStats.totalAmount;
-    }
-
-    return grouped;
-  }
-
-  private groupOrdersByMonth(orders: OrderRecord[]): Record<string, MonthlyStats> {
-    const grouped: Record<string, MonthlyStats> = {};
-
-    for (const order of orders) {
-      const date = new Date(order.timestamp);
-      const monthStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
-
-      if (!grouped[monthStr]) {
-        grouped[monthStr] = {
-          month: monthStr,
-          totalOrders: 0,
-          totalAmount: 0,
-          totalCost: 0,
-          averagePrice: 0
-        };
-      }
-
-      const monthStats = grouped[monthStr];
-      monthStats.totalOrders++;
-      monthStats.totalAmount += order.amount;
-      monthStats.totalCost += order.cost;
-      monthStats.averagePrice = monthStats.totalCost / monthStats.totalAmount;
-    }
-
-    return grouped;
-  }
-
   private formatNumber(num: number): string {
-    // Format based on the magnitude
     if (num >= 1000) {
       return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     } else if (num >= 1) {
       return num.toFixed(4).replace(/\.?0+$/, '');
     } else {
-      // For very small numbers (< 1), show more precision
       return num.toFixed(8).replace(/\.?0+$/, '');
     }
   }

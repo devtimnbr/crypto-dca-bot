@@ -1,7 +1,8 @@
+
 import ccxt from "ccxt";
 import dotenv from "dotenv";
 import { cleanEnv, str, bool, num } from "envalid";
-import { AppConfig, TradingConfig, TelegramConfig } from "./types";
+import { AppConfig, TradingConfig, TelegramConfig } from "../types";
 
 dotenv.config();
 

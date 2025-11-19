@@ -1,14 +1,15 @@
+
 import ccxt, { Exchange, Market } from "ccxt";
-import { Config } from "./config";
-import { MarketInfo, OrderResult, BalanceInfo } from "./types";
-import { getMinimumBaseAmount } from "./utils";
-import { DatabaseService } from "./database";
+import { Config } from "../config";
+import { MarketInfo, OrderResult, BalanceInfo } from "../types";
+import { getMinimumBaseAmount } from "../utils";
+import { DatabaseService } from "./DatabaseService";
 
 export class TradingService {
   private exchange: Exchange;
   private marketInfo: MarketInfo | null = null;
 
-  constructor() {
+  constructor(private databaseService: DatabaseService) {
     const config = Config.getInstance().trading;
     const exchangeClass = ccxt[config.exchangeId as keyof typeof ccxt] as typeof Exchange;
     
@@ -87,8 +88,7 @@ export class TradingService {
     };
 
     // Save order to database
-    const db = DatabaseService.getInstance();
-    await db.saveOrder(orderResult, config.orderType);
+    await this.databaseService.saveOrder(orderResult, config.orderType);
 
     return orderResult;
   }

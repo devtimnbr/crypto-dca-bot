@@ -1,3 +1,4 @@
+
 export interface TradingConfig {
   sandbox: boolean;
   exchangeId: string;

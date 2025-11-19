@@ -1,5 +1,5 @@
 import { Exchange, Market } from "ccxt";
-import { Config } from "./config";
+import { Config } from "../config";
 
 export function printBanner(): void {
   console.log();
