@@ -151,7 +151,7 @@ export class NotificationService {
       <b>📊 Order Details:</b>
       ━━━━━━━━━━━━━━━━━━
       🛒 <b>Bought:</b> ${formatNumberWithPrecision(orderResult.amount, config.baseCurrencyPrecision)} ${marketInfo.base}
-      💵 <b>Cost:</b> ${formatNumberWithPrecision(orderResult.cost, config.quoteCurrencyPrecision)} ${marketInfo.quote}
+      💵 <b>Cost:</b> ${formatNumberWithPrecision(orderResult.amount * orderResult.price, config.quoteCurrencyPrecision)} ${marketInfo.quote}
       📍 <b>Price:</b> ${formatNumberWithPrecision(orderResult.price, config.quoteCurrencyPrecision)} ${marketInfo.quote}
 
       <b>🏦 Current Balance:</b>

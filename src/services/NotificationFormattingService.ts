@@ -74,6 +74,7 @@ export class NotificationFormattingService {
 
     const basePrecision = this.config.trading.baseCurrencyPrecision;
     const quotePrecision = this.config.trading.quoteCurrencyPrecision;
+    const [baseCurrency, quoteCurrency] = this.config.trading.pair.split(":")[0].split("/");
 
     let message = `📅 *Daily Stats (Last ${days} days)*\n\n`;
 
@@ -91,8 +92,8 @@ export class NotificationFormattingService {
 
         message += `🔸 *${dayName} ${dateStr}*\n`;
         message += `   Orders: ${dayStats.totalOrders} | `;
-        message += `Amount: ${formattedAmount} ${dayStats.baseCurrency} | `;
-        message += `Cost: ${formattedCost} ${dayStats.quoteCurrency}\n\n`;
+        message += `Amount: ${formattedAmount} ${baseCurrency} | `;
+        message += `Cost: ${formattedCost} ${quoteCurrency}\n\n`;
       } else {
         message += `🔸 *${dayName} ${dateStr}*\n`;
         message += `   No orders\n\n`;
@@ -107,6 +108,7 @@ export class NotificationFormattingService {
 
     const basePrecision = this.config.trading.baseCurrencyPrecision;
     const quotePrecision = this.config.trading.quoteCurrencyPrecision;
+    const [baseCurrency, quoteCurrency] = this.config.trading.pair.split(":")[0].split("/");
 
     for (let i = months - 1; i >= 0; i--) {
       const date = new Date();
@@ -120,8 +122,8 @@ export class NotificationFormattingService {
 
         message += `🔸 *${monthStr}*\n`;
         message += `   Orders: ${monthStats.totalOrders} | `;
-        message += `Invested: ${formattedCost} ${monthStats.quoteCurrency} | `;
-        message += `Bought: ${formattedAmount} ${monthStats.baseCurrency}\n\n`;
+        message += `Invested: ${formattedCost} ${quoteCurrency} | `;
+        message += `Bought: ${formattedAmount} ${baseCurrency}\n\n`;
       } else {
         message += `🔸 *${monthStr}*\n`;
         message += `   No orders\n\n`;
