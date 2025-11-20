@@ -71,7 +71,7 @@ export class TradingService {
       }
       // Use the actual filled amount from exchange if available and reasonable
       // Some exchanges may return incorrect values, so validate against the original request
-      const executedAmount = order.filled || amount;
+      const executedAmount = Number(order.filled) || amount;
 
       // Basic sanity check: executed amount should be close to requested amount
       // For small orders like this, we expect executed amount to be within reasonable bounds
@@ -98,7 +98,7 @@ export class TradingService {
     );
 
     const orderResult = {
-      amount,
+      amount: Number(amount),
       price: orderPrice,
       baseTotal,
       quoteTotal,
