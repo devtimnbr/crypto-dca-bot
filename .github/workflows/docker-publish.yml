@@ -23,10 +23,6 @@ jobs:
       contents: read
       packages: write
 
-    outputs:
-      image: ${{ steps.image.outputs.image }}
-      digest: ${{ steps.build.outputs.digest }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -56,7 +52,6 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push Docker image
-        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -66,25 +61,3 @@ jobs:
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true
-
-      - name: Export digest
-        id: digest
-        run: |
-          mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
-
-      - name: Upload digest artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: digests
-          path: /tmp/digests/*
-          retention-days: 1
-
-      - name: Output image
-        id: image
-        run: |
-          image="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}"
-          echo "image=${image}" >> $GITHUB_OUTPUT
-          echo "Built image: ${image}"
