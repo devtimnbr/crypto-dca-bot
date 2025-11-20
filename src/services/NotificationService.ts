@@ -141,7 +141,6 @@ export class NotificationService {
       try {
         await this.telegram.telegram.sendMessage(this.chatId, message, {
           parse_mode: parseMode,
-          disable_web_page_preview: true,
         });
         console.log("Telegram message sent successfully");
         return; // Success, exit the retry loop
