@@ -17,17 +17,37 @@ export class NotificationService {
   }
   private initializeTelegram(): void {
     const config = Config.getInstance().telegram;
-    
+
     if (!config.botToken || !config.chatId) {
       console.log("No Telegram configuration provided - notifications disabled");
       return;
     }
 
-    this.telegram = new Telegraf(config.botToken);
-    this.chatId = config.chatId;
-    this.setupCommands();
-    this.telegram.launch();
-    this.sendMessage("🤖 Crypto DCA Bot v2 started...");
+    try {
+      this.telegram = new Telegraf(config.botToken);
+      this.chatId = config.chatId;
+      this.setupCommands();
+
+      // Handle graceful shutdown
+      process.once('SIGINT', () => this.telegram?.stop('SIGINT'));
+      process.once('SIGTERM', () => this.telegram?.stop('SIGTERM'));
+
+      this.telegram.launch()
+        .then(() => {
+          console.log("Telegram bot initialized successfully");
+          // Send startup message with error handling
+          this.sendMessage("🤖 Crypto DCA Bot v2 started...").catch(err => {
+            console.log("Failed to send startup message:", err.message);
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to launch Telegram bot:", err.message);
+          this.telegram = undefined; // Disable Telegram on failure
+        });
+    } catch (error: any) {
+      console.error("Error initializing Telegram bot:", error.message);
+      this.telegram = undefined; // Disable Telegram on failure
+    }
   }
 
 
@@ -123,22 +143,33 @@ export class NotificationService {
           parse_mode: parseMode,
           disable_web_page_preview: true,
         });
+        console.log("Telegram message sent successfully");
         return; // Success, exit the retry loop
       } catch (error: any) {
         // Log only essential error info, not full stack trace for network errors
         const isNetworkError = error.code === 'ECONNRESET' ||
                               error.code === 'ECONNREFUSED' ||
                               error.code === 'ETIMEDOUT' ||
-                              error.type === 'system';
+                              error.code === 'ENOTFOUND' ||
+                              error.type === 'system' ||
+                              error.response?.error_code === 429; // Rate limit
 
         if (isNetworkError) {
-          console.log(`Network error sending Telegram message (attempt ${attempt}/${maxRetries}): ${error.code || error.type}`);
+          console.log(`Network error sending Telegram message (attempt ${attempt}/${maxRetries}): ${error.code || error.type || error.response?.error_code}`);
         } else {
           console.log(`Error sending Telegram message (attempt ${attempt}/${maxRetries}): ${error.message || error}`);
         }
 
+        // For rate limiting (HTTP 429), wait longer before retrying
+        if (error.response?.error_code === 429) {
+          const retryAfter = error.response?.parameters?.retry_after || 30;
+          console.log(`Rate limited. Waiting ${retryAfter} seconds before retry...`);
+          await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+          continue;
+        }
+
         if (attempt === maxRetries) {
-          console.log("Failed to send Telegram message after all retries");
+          console.log("Failed to send Telegram message after all retries - giving up");
           return;
         }
 
